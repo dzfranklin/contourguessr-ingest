@@ -192,7 +192,7 @@ func callFlickr(method string, resp any, params map[string]string) {
 		return
 	}
 
-	err = json.Unmarshal([]byte(body), &resp)
+	err = json.Unmarshal(body, &resp)
 	if err != nil {
 		log.Fatal(err)
 		return
