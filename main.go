@@ -18,7 +18,7 @@ var region string
 var regionBbox string
 
 func init() {
-	err := godotenv.Load(".env.local")
+	err := godotenv.Load(".env", ".local.env")
 	if err != nil {
 		log.Fatal("Error loading .env file", err)
 	}
