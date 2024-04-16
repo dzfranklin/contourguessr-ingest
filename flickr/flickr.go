@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -50,6 +51,9 @@ type Photo struct {
 	Title  string `json:"title"`
 }
 
+var mu sync.Mutex
+var lastCall time.Time
+
 func Call(method string, resp any, params map[string]string) {
 	params["method"] = method
 	params["api_key"] = flickrAPIKey
@@ -66,11 +70,6 @@ func Call(method string, resp any, params map[string]string) {
 		Host:     "www.flickr.com",
 		Path:     "/services/rest",
 		RawQuery: query.Encode(),
-	}
-
-	err := os.MkdirAll(cacheDir, 0755)
-	if err != nil {
-		log.Fatal(err)
 	}
 
 	cacheQuery, err := url.ParseQuery(query.Encode())
@@ -96,7 +95,13 @@ func Call(method string, resp any, params map[string]string) {
 		return
 	}
 
-	time.Sleep(time.Second)
+	mu.Lock()
+	defer mu.Unlock()
+	wait := time.Until(lastCall.Add(time.Second))
+	if wait > 0 {
+		time.Sleep(wait)
+	}
+	lastCall = time.Now()
 
 	httpResp, err := http.Get(r.String())
 	if err != nil {
@@ -114,10 +119,26 @@ func Call(method string, resp any, params map[string]string) {
 		return
 	}
 
-	file, err := os.Create(cacheFile)
-	if err != nil {
+	var file *os.File
+	var didCreateDir bool
+	for {
+		file, err = os.Create(cacheFile)
+		if err == nil {
+			break
+		}
+
+		if !didCreateDir && os.IsNotExist(err) {
+			err = os.MkdirAll(cacheDir, 0755)
+			if err != nil {
+				log.Fatal(err)
+			}
+			didCreateDir = true
+			continue
+		}
+
 		log.Fatal(err)
 	}
+
 	defer file.Close()
 	_, err = file.Write(body)
 	if err != nil {
