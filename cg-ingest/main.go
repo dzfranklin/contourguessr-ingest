@@ -5,8 +5,10 @@ import (
 	"contourguessr-ingest/flickr"
 	"encoding/json"
 	"fmt"
+	"github.com/jaytaylor/html2text"
 	"github.com/joho/godotenv"
 	flag "github.com/spf13/pflag"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
@@ -58,7 +60,28 @@ func main() {
 	end := time.Date(2025, time.January, 1, 0, 0, 0, 0, time.UTC)
 	step := time.Hour * 24 * 30
 
-	picsFile, err := os.Create("pictures.ndjson")
+	existing := make(map[string]struct{})
+	existingCounts := make(map[string]int)
+	picsFile, err := os.Open("pictures.ndjson")
+	if err == nil {
+		dec := json.NewDecoder(picsFile)
+		for {
+			var entry Entry
+			if err := dec.Decode(&entry); err != nil {
+				if err == io.EOF {
+					break
+				}
+				log.Fatal(err)
+			}
+			existing[entry.Id] = struct{}{}
+			existingCounts[entry.Region]++
+		}
+		picsFile.Close()
+	} else if !os.IsNotExist(err) {
+		log.Fatal(err)
+	}
+
+	picsFile, err = os.OpenFile("pictures.ndjson", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0640)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -88,13 +111,11 @@ func main() {
 		})
 
 		classifier := NewClassifier()
-		pickCount := 0
+		existingCount := existingCounts[region]
+		pickCount := existingCount
 		for n, candidate := range candidates {
-			if n > 0 {
-				log.Printf("picked %d of %d (%0.0f%%), scanned %d of %d (%0.0f%%), pick ratio %0.0f%%",
-					pickCount, *numberToIngest, (float64(pickCount)/float64(*numberToIngest))*100.0,
-					n, len(candidates), (float64(n)/float64(len(candidates)))*100.0,
-					(float64(pickCount)/float64(n))*100.0)
+			if _, ok := existing[candidate.ID]; ok {
+				continue
 			}
 
 			if pickCount >= *numberToIngest {
@@ -110,6 +131,11 @@ func main() {
 			if err := picsEnc.Encode(entry); err != nil {
 				log.Fatal(err)
 			}
+
+			log.Printf("picked %d of %d (%0.0f%%), scanned %d of %d (%0.0f%%), pick ratio %0.0f%%",
+				pickCount, *numberToIngest, (float64(pickCount)/float64(*numberToIngest))*100.0,
+				n+1, len(candidates), (float64(n+1)/float64(len(candidates)))*100.0,
+				(float64(pickCount-existingCount)/float64(n+1))*100.0)
 		}
 
 		log.Printf("Picked %d images (target was %d)", pickCount, *numberToIngest)
@@ -125,7 +151,7 @@ type Classifier struct {
 func NewClassifier() *Classifier {
 	return &Classifier{
 		Client: &http.Client{
-			Timeout: time.Second * 10,
+			Timeout: time.Minute * 5,
 		},
 	}
 }
@@ -277,6 +303,11 @@ func createEntry(region string, id string) Entry {
 
 	r := rand.Float64()
 
+	description, err := html2text.FromString(info.Photo.Description.Content, html2text.Options{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	return Entry{
 		Id:                  "flickr:" + id,
 		Region:              region,
@@ -286,7 +317,7 @@ func createEntry(region string, id string) Entry {
 		OwnerIcon:           ownerIcon,
 		OwnerWebpage:        ownerWebpage,
 		Title:               info.Photo.Title.Content,
-		Description:         info.Photo.Description.Content,
+		Description:         description,
 		DateTaken:           info.Photo.Dates.Taken,
 		Latitude:            info.Photo.Location.Latitude,
 		Longitude:           info.Photo.Location.Longitude,
