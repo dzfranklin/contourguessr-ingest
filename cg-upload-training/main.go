@@ -46,13 +46,13 @@ func init() {
 		log.Println(err)
 	}
 
-	visionKey = os.Getenv("VISION_KEY")
+	visionKey = os.Getenv("VISION_TRAINING_KEY")
 	if visionKey == "" {
-		log.Fatal("VISION_KEY not set")
+		log.Fatal("VISION_TRAINING_KEY not set")
 	}
-	visionEndpoint = os.Getenv("VISION_ENDPOINT")
+	visionEndpoint = os.Getenv("VISION_TRAINING_ENDPOINT")
 	if visionEndpoint == "" {
-		log.Fatal("VISION_ENDPOINT not set")
+		log.Fatal("VISION_TRAINING_ENDPOINT not set")
 	}
 	visionProjectID = os.Getenv("VISION_PROJECT_ID")
 	if visionProjectID == "" {
@@ -77,6 +77,7 @@ func main() {
 	start := time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)
 	end := start.AddDate(4, 0, 0)
 	step := time.Hour * 24 * 7
+	//step := time.Hour * 24 * 7 * 30 * 3
 	pickPerStep := 5
 
 	ctx := context.Background()
@@ -111,6 +112,11 @@ func main() {
 			"max_taken_date": fmt.Sprintf("%d", t.Add(step).Unix()),
 			"sort":           "date-uploaded-asc",
 			"per_page":       "500",
+			//"text":           "bw",
+			//"text": "cloud",
+			//"text": "mist",
+			//"text": "fog",
+			//"text": "road",
 		})
 
 		// Find candidates we haven't already used

@@ -2,7 +2,9 @@ package flickr
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/joho/godotenv"
+	"hash/fnv"
 	"io"
 	"log"
 	"net/http"
@@ -11,6 +13,7 @@ import (
 	"time"
 )
 
+var cacheDir = "/tmp/cg-flickr-cache"
 var flickrAPIKey string
 
 func init() {
@@ -26,7 +29,11 @@ func init() {
 }
 
 type SearchResponse struct {
-	Photos struct {
+	Page    int `json:"page"`
+	Pages   int `json:"pages"`
+	Perpage int `json:"perpage"`
+	Total   int `json:"total"`
+	Photos  struct {
 		Page    int     `json:"page"`
 		Pages   int     `json:"pages"`
 		PerPage int     `json:"perpage"`
@@ -61,6 +68,34 @@ func Call(method string, resp any, params map[string]string) {
 		RawQuery: query.Encode(),
 	}
 
+	err := os.MkdirAll(cacheDir, 0755)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	cacheQuery, err := url.ParseQuery(query.Encode())
+	if err != nil {
+		log.Fatal(err)
+	}
+	cacheQuery.Del("api_key")
+
+	cacheKey := hash(cacheQuery.Encode())
+	cacheFile := fmt.Sprintf("%s/%d.json", cacheDir, cacheKey)
+
+	if _, err := os.Stat(cacheFile); err == nil {
+		file, err := os.Open(cacheFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
+
+		err = json.NewDecoder(file).Decode(resp)
+		if err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
+
 	time.Sleep(time.Second)
 
 	httpResp, err := http.Get(r.String())
@@ -77,6 +112,16 @@ func Call(method string, resp any, params map[string]string) {
 	if err != nil {
 		log.Fatal(err)
 		return
+	}
+
+	file, err := os.Create(cacheFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	_, err = file.Write(body)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	err = json.Unmarshal(body, &resp)
@@ -107,7 +152,8 @@ func SourceURL(photo Photo, size string) string {
 	return "https://live.staticflickr.com/" + photo.Server + "/" + photo.ID + "_" + photo.Secret + "_" + size + ".jpg"
 }
 
-func WebURL(photo Photo) string {
-	// https://www.flickr.com/photos/{owner-id}/{photo-id}
-	return "https://www.flickr.com/photos/" + photo.Owner + "/" + photo.ID
+func hash(s string) uint64 {
+	h := fnv.New64a()
+	_, _ = h.Write([]byte(s))
+	return h.Sum64()
 }

@@ -1,4 +1,4 @@
 .local.env
-/out
 .idea
 /trained.ndjson
+/pictures.ndjson

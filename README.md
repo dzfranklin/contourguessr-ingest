@@ -3,5 +3,5 @@
 Upload the manifests via
 
 ```bash
-aws s3 sync out/manifests s3://contourguessr-ingest-manifests/
+aws s3 cp ./pictures.ndjson s3://contourguessr-data/
 ```
