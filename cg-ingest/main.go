@@ -131,7 +131,7 @@ func main() {
 
 			entry, err := createEntry(region, candidate.ID)
 			if err != nil {
-				log.Print(err)
+				log.Print("failed to create entry: ", err)
 				continue
 			}
 			pickCount++

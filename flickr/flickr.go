@@ -90,7 +90,7 @@ func Call(method string, resp any, params map[string]string) error {
 
 		err = json.NewDecoder(file).Decode(resp)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		return nil
 	}
