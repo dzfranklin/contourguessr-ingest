@@ -95,7 +95,7 @@ func main() {
 		for t := start; t.Before(end); t = t.Add(step) {
 			log.Printf("Fetching images from %s to %s", t, t.Add(step))
 			var search flickr.SearchResponse
-			flickr.Call("flickr.photos.search", &search, map[string]string{
+			err := flickr.Call("flickr.photos.search", &search, map[string]string{
 				"bbox":           bbox,
 				"min_taken_date": fmt.Sprintf("%d", t.Unix()),
 				"max_taken_date": fmt.Sprintf("%d", t.Add(step).Unix()),
@@ -103,6 +103,9 @@ func main() {
 				"safe_search":    "1",
 				"per_page":       "500",
 			})
+			if err != nil {
+				log.Fatal(err)
+			}
 			candidates = append(candidates, search.Photos.Photo...)
 		}
 
@@ -126,7 +129,11 @@ func main() {
 				continue
 			}
 
-			entry := createEntry(region, candidate.ID)
+			entry, err := createEntry(region, candidate.ID)
+			if err != nil {
+				log.Print(err)
+				continue
+			}
 			pickCount++
 			if err := picsEnc.Encode(entry); err != nil {
 				log.Fatal(err)
@@ -223,7 +230,7 @@ type Entry struct {
 	Webpage             string        `json:"url"`
 }
 
-func createEntry(region string, id string) Entry {
+func createEntry(region string, id string) (entry Entry, err error) {
 	var info struct {
 		Photo struct {
 			Owner struct {
@@ -269,14 +276,20 @@ func createEntry(region string, id string) Entry {
 			} `json:"urls"`
 		} `json:"photo"`
 	}
-	flickr.Call("flickr.photos.getInfo", &info, map[string]string{"photo_id": id})
+	err = flickr.Call("flickr.photos.getInfo", &info, map[string]string{"photo_id": id})
+	if err != nil {
+		return
+	}
 
 	var sizes struct {
 		Sizes struct {
 			Size []PictureSize `json:"size"`
 		}
 	}
-	flickr.Call("flickr.photos.getSizes", &sizes, map[string]string{"photo_id": id})
+	err = flickr.Call("flickr.photos.getSizes", &sizes, map[string]string{"photo_id": id})
+	if err != nil {
+		return
+	}
 
 	ownerIcon := "https://www.flickr.com/images/buddyicon.gif"
 	if info.Photo.Owner.IconServer != "0" {
@@ -303,12 +316,13 @@ func createEntry(region string, id string) Entry {
 
 	r := rand.Float64()
 
-	description, err := html2text.FromString(info.Photo.Description.Content, html2text.Options{})
+	var description string
+	description, err = html2text.FromString(info.Photo.Description.Content, html2text.Options{})
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
 
-	return Entry{
+	entry = Entry{
 		Id:                  "flickr:" + id,
 		Region:              region,
 		R:                   r,
@@ -325,4 +339,5 @@ func createEntry(region string, id string) Entry {
 		LocationDescription: locationDescription,
 		Webpage:             webpage,
 	}
+	return
 }

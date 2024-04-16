@@ -54,7 +54,7 @@ type Photo struct {
 var mu sync.Mutex
 var lastCall time.Time
 
-func Call(method string, resp any, params map[string]string) {
+func Call(method string, resp any, params map[string]string) error {
 	params["method"] = method
 	params["api_key"] = flickrAPIKey
 	params["format"] = "json"
@@ -92,7 +92,7 @@ func Call(method string, resp any, params map[string]string) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		return
+		return nil
 	}
 
 	mu.Lock()
@@ -108,15 +108,14 @@ func Call(method string, resp any, params map[string]string) {
 		log.Fatal(err)
 	}
 	if httpResp.StatusCode != http.StatusOK {
-		log.Fatalf("HTTP status %d", httpResp.StatusCode)
+		return fmt.Errorf("HTTP status %d", httpResp.StatusCode)
 	}
 
 	defer httpResp.Body.Close()
 
 	body, err := io.ReadAll(httpResp.Body)
 	if err != nil {
-		log.Fatal(err)
-		return
+		return err
 	}
 
 	var file *os.File
@@ -147,9 +146,10 @@ func Call(method string, resp any, params map[string]string) {
 
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
-		log.Fatal(err)
-		return
+		return err
 	}
+
+	return nil
 }
 
 /*

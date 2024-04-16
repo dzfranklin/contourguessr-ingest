@@ -106,7 +106,7 @@ func main() {
 		// Search for photos within the step
 
 		var search flickr.SearchResponse
-		flickr.Call("flickr.photos.search", &search, map[string]string{
+		err := flickr.Call("flickr.photos.search", &search, map[string]string{
 			"bbox":           bbox,
 			"min_taken_date": fmt.Sprintf("%d", t.Unix()),
 			"max_taken_date": fmt.Sprintf("%d", t.Add(step).Unix()),
@@ -118,6 +118,9 @@ func main() {
 			//"text": "fog",
 			//"text": "road",
 		})
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		// Find candidates we haven't already used
 
