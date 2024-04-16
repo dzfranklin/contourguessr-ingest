@@ -75,7 +75,7 @@ func init() {
 
 func main() {
 	start := time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)
-	end := start.AddDate(1, 0, 0)
+	end := start.AddDate(4, 0, 0)
 	step := time.Hour * 24 * 7
 	pickPerStep := 5
 
@@ -128,7 +128,7 @@ func main() {
 			candidates[i], candidates[j] = candidates[j], candidates[i]
 		})
 		picks := candidates[:min(pickPerStep, len(candidates))]
-		log.Printf("Randomly picked %s out of %d candidates", len(picks), len(candidates))
+		log.Printf("Randomly picked %d out of %d candidates", len(picks), len(candidates))
 
 		// Download and upload each
 
