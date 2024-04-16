@@ -21,7 +21,7 @@ var visionKey string
 var modelEndpoint string
 
 var regions map[string]string
-var numberToIngest = flag.IntP("n", "n", 5000, "Number of images to ingest")
+var numberToIngest = flag.IntP("n", "n", 2000, "Number of images to ingest")
 
 func init() {
 	regionsFile, err := os.Open("regions.json")
@@ -93,7 +93,7 @@ func main() {
 
 		var candidates []flickr.Photo
 		for t := start; t.Before(end); t = t.Add(step) {
-			log.Printf("Fetching images from %s to %s", t, t.Add(step))
+			log.Printf("%s: Fetching images from %s to %s", region, t, t.Add(step))
 			var search flickr.SearchResponse
 			err := flickr.Call("flickr.photos.search", &search, map[string]string{
 				"bbox":           bbox,
@@ -117,7 +117,7 @@ func main() {
 		existingCount := existingCounts[region]
 		pickCount := existingCount
 		for n, candidate := range candidates {
-			if _, ok := existing[candidate.ID]; ok {
+			if _, ok := existing["flickr:"+candidate.ID]; ok {
 				continue
 			}
 
@@ -139,13 +139,14 @@ func main() {
 				log.Fatal(err)
 			}
 
-			log.Printf("picked %d of %d (%0.0f%%), scanned %d of %d (%0.0f%%), pick ratio %0.0f%%",
+			log.Printf("%s: picked %d of %d (%0.0f%%), scanned %d of %d (%0.0f%%), pick ratio %0.0f%%",
+				region,
 				pickCount, *numberToIngest, (float64(pickCount)/float64(*numberToIngest))*100.0,
 				n+1, len(candidates), (float64(n+1)/float64(len(candidates)))*100.0,
 				(float64(pickCount-existingCount)/float64(n+1))*100.0)
 		}
 
-		log.Printf("Picked %d images (target was %d)", pickCount, *numberToIngest)
+		log.Printf("%s: Picked %d images (target was %d)", region, pickCount, *numberToIngest)
 	}
 
 	log.Print("Done")
@@ -215,7 +216,8 @@ type PictureSize struct {
 type Entry struct {
 	Id                  string        `json:"id"`
 	Region              string        `json:"region"`
-	R                   float64       `json:"r"`
+	RX                  float64       `json:"rx"`
+	RY                  float64       `json:"ry"`
 	Sizes               []PictureSize `json:"sizes"`
 	OwnerUsername       string        `json:"ownerUsername"`
 	OwnerIcon           string        `json:"ownerIcon"`
@@ -314,8 +316,6 @@ func createEntry(region string, id string) (entry Entry, err error) {
 		webpage = info.Photo.URLs.URL[0].Content
 	}
 
-	r := rand.Float64()
-
 	var description string
 	description, err = html2text.FromString(info.Photo.Description.Content, html2text.Options{})
 	if err != nil {
@@ -325,7 +325,8 @@ func createEntry(region string, id string) (entry Entry, err error) {
 	entry = Entry{
 		Id:                  "flickr:" + id,
 		Region:              region,
-		R:                   r,
+		RX:                  rand.Float64(),
+		RY:                  rand.Float64(),
 		Sizes:               sizes.Sizes.Size,
 		OwnerUsername:       info.Photo.Owner.Username,
 		OwnerIcon:           ownerIcon,
