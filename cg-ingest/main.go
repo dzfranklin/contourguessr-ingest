@@ -58,7 +58,7 @@ func init() {
 func main() {
 	start := time.Date(2010, time.January, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2025, time.January, 1, 0, 0, 0, 0, time.UTC)
-	step := time.Hour * 24 * 30
+	step := time.Hour * 24 * 30 * 3
 
 	existing := make(map[string]struct{})
 	existingCounts := make(map[string]int)
@@ -93,7 +93,6 @@ func main() {
 
 		var candidates []flickr.Photo
 		for t := start; t.Before(end); t = t.Add(step) {
-			log.Printf("%s: Fetching images from %s to %s", region, t, t.Add(step))
 			var search flickr.SearchResponse
 			err := flickr.Call("flickr.photos.search", &search, map[string]string{
 				"bbox":           bbox,
@@ -106,6 +105,7 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
+			log.Printf("%s: Fetched %d images from %s to %s", region, len(search.Photos.Photo), t, t.Add(step))
 			candidates = append(candidates, search.Photos.Photo...)
 		}
 
