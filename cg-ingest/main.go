@@ -13,6 +13,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"sort"
 	"strings"
 	"time"
 )
@@ -88,7 +89,14 @@ func main() {
 	defer picsFile.Close()
 	picsEnc := json.NewEncoder(picsFile)
 
-	for region, bbox := range regions {
+	regionOrder := make([]string, 0, len(regions))
+	for region := range regions {
+		regionOrder = append(regionOrder, region)
+	}
+	sort.Strings(regionOrder)
+
+	for _, region := range regionOrder {
+		bbox := regions[region]
 		log.Printf("Processing region %s", region)
 
 		var candidates []flickr.Photo
