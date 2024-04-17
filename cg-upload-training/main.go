@@ -15,6 +15,8 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"sort"
+	"strings"
 	"time"
 )
 
@@ -24,8 +26,17 @@ var visionKey string
 var visionEndpoint string
 var visionProjectID string
 
-var region = flag.StringP("region", "r", "", "Region to search in")
-var bbox string
+var query = flag.StringP("query", "q", "", "Flickr search query")
+var targetCount = flag.IntP("count", "c", 10, "Number of images to ingest per region")
+var regionFilter = flag.StringP("region-filter", "r", "", "Prefix of region IDs to ingest")
+var noBbox = flag.Bool("no-bbox", false, "Don't filter by bounding box")
+
+var regionList []Region
+
+type Region struct {
+	Id   string `json:"id"`
+	BBox string `json:"bbox"`
+}
 
 func init() {
 	regionsFile, err := os.Open("regions.json")
@@ -38,6 +49,13 @@ func init() {
 	if err := dec.Decode(&regions); err != nil {
 		log.Fatal(err)
 	}
+
+	for id, bbox := range regions {
+		regionList = append(regionList, Region{Id: id, BBox: bbox})
+	}
+	sort.Slice(regionList, func(i, j int) bool {
+		return regionList[i].Id < regionList[j].Id
+	})
 
 	// Environment variables
 
@@ -62,24 +80,9 @@ func init() {
 	// Flags
 
 	flag.Parse()
-
-	if *region == "" {
-		log.Fatal("region missing")
-	}
-	var ok bool
-	bbox, ok = regions[*region]
-	if !ok {
-		log.Fatalf("unknown region %q", *region)
-	}
 }
 
 func main() {
-	start := time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)
-	end := start.AddDate(4, 0, 0)
-	step := time.Hour * 24 * 7
-	//step := time.Hour * 24 * 7 * 30 * 3
-	pickPerStep := 5
-
 	ctx := context.Background()
 
 	trainer := training.New(visionKey, visionEndpoint)
@@ -100,46 +103,59 @@ func main() {
 		Timeout: time.Second * 10,
 	}
 
-	for t := start; t.Before(end); t = t.Add(step) {
-		log.Println("Searching for photos from", t, "to", t.Add(step))
-
-		// Search for photos within the step
-
-		var search flickr.SearchResponse
-		err := flickr.Call("flickr.photos.search", &search, map[string]string{
-			"bbox":           bbox,
-			"min_taken_date": fmt.Sprintf("%d", t.Unix()),
-			"max_taken_date": fmt.Sprintf("%d", t.Add(step).Unix()),
-			"sort":           "date-uploaded-asc",
-			"per_page":       "500",
-			//"text":           "bw",
-			//"text": "cloud",
-			//"text": "mist",
-			//"text": "fog",
-			//"text": "road",
-		})
-		if err != nil {
-			log.Fatal(err)
+	for _, region := range regionList {
+		if *regionFilter != "" && !strings.HasPrefix(region.Id, *regionFilter) {
+			log.Printf("Skipping %s", region.Id)
+			continue
 		}
+		log.Printf("Searching %s", region.Id)
 
-		// Find candidates we haven't already used
-
+		// Search for candidates
 		var candidates []flickr.Photo
-		for _, photo := range search.Photos.Photo {
-			if !contains(alreadyTrained, photo.ID) {
-				candidates = append(candidates, photo)
+		for year := 2023; year >= 2019; year-- {
+			for month := 12; month >= 1; month = month - 3 {
+				start := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+				end := start.AddDate(0, 1, 0)
+
+				bbox := region.BBox
+				if *noBbox {
+					bbox = ""
+				}
+
+				var search flickr.SearchResponse
+				err := flickr.Call("flickr.photos.search", &search, map[string]string{
+					"bbox":           bbox,
+					"min_taken_date": fmt.Sprintf("%d", start.Unix()),
+					"max_taken_date": fmt.Sprintf("%d", end.Unix()),
+					"sort":           "interestingness-desc",
+					"per_page":       "500",
+					"text":           *query,
+				})
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				for _, photo := range search.Photos.Photo {
+					if !contains(alreadyTrained, photo.ID) {
+						candidates = append(candidates, photo)
+					}
+				}
+			}
+
+			log.Printf("Searched %d, %0.0f%% done", year, min((float64(len(candidates))/float64(*targetCount))*100, 100))
+
+			if len(candidates) >= *targetCount {
+				break
 			}
 		}
 
 		// Pick candidates at random
-
 		rand.Shuffle(len(candidates), func(i, j int) {
 			candidates[i], candidates[j] = candidates[j], candidates[i]
 		})
-		picks := candidates[:min(pickPerStep, len(candidates))]
-		log.Printf("Randomly picked %d out of %d candidates", len(picks), len(candidates))
+		picks := candidates[:min(*targetCount, len(candidates))]
 
-		// Download and upload each
+		// Upload
 
 		for _, pick := range picks {
 			src := flickr.SourceURL(pick, "m")
@@ -159,15 +175,21 @@ func main() {
 				log.Fatal(err)
 			}
 
+			// Upload
 			_, err = trainer.CreateImagesFromData(ctx, project, io.NopCloser(bytes.NewReader(imgBytes)), []uuid.UUID{})
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			// Mark as trained
-
+			// Mark trained
 			pushTrained(trainedEnc, pick.ID)
 		}
+
+		if *noBbox {
+			break
+		}
+
+		log.Printf("Uploaded %d images from %s (%d candidates, target was %d)", len(picks), region.Id, len(candidates), *targetCount)
 	}
 
 	log.Println("Done")
