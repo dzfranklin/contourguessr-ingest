@@ -23,6 +23,7 @@ var modelEndpoint string
 
 var regions map[string]string
 var numberToIngest = flag.IntP("n", "n", 2000, "Number of images to ingest")
+var numberToPredict = flag.IntP("predict-without-ingesting", "p", 0, "Disable ingestion and only predict on the specified number of images")
 
 func init() {
 	regionsFile, err := os.Open("regions.json")
@@ -123,7 +124,12 @@ func main() {
 
 		classifier := NewClassifier()
 		existingCount := existingCounts[region]
+
 		pickCount := existingCount
+		if *numberToPredict > 0 {
+			pickCount = 0
+		}
+
 		for n, candidate := range candidates {
 			if _, ok := existing["flickr:"+candidate.ID]; ok {
 				continue
@@ -137,14 +143,16 @@ func main() {
 				continue
 			}
 
-			entry, err := createEntry(region, candidate.ID)
-			if err != nil {
-				log.Print("failed to create entry: ", err)
-				continue
-			}
-			pickCount++
-			if err := picsEnc.Encode(entry); err != nil {
-				log.Fatal(err)
+			if *numberToPredict == 0 {
+				entry, err := createEntry(region, candidate.ID)
+				if err != nil {
+					log.Print("failed to create entry: ", err)
+					continue
+				}
+				pickCount++
+				if err := picsEnc.Encode(entry); err != nil {
+					log.Fatal(err)
+				}
 			}
 
 			log.Printf("%s: picked %d of %d (%0.0f%%), scanned %d of %d (%0.0f%%), pick ratio %0.0f%%",
