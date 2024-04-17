@@ -24,7 +24,7 @@ var visionKey string
 var visionEndpoint string
 var visionProjectID string
 
-var region = flag.String("region", "", "Region to search in")
+var region = flag.StringP("region", "r", "", "Region to search in")
 var bbox string
 
 func init() {
