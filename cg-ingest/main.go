@@ -22,6 +22,10 @@ var visionKey string
 var modelEndpoint string
 
 var regions map[string]string
+var excludes map[string][]float64
+
+var removeRegion = flag.String("remove-region", "", "Remove pictures in the region from the dataset")
+var regionPrefix = flag.StringP("region-prefix", "r", "", "Prefix of region IDs to ingest")
 var numberToIngest = flag.IntP("n", "n", 2000, "Number of images to ingest")
 var numberToPredict = flag.IntP("predict-without-ingesting", "p", 0, "Disable ingestion and only predict on the specified number of images")
 
@@ -33,6 +37,16 @@ func init() {
 	defer regionsFile.Close()
 	dec := json.NewDecoder(regionsFile)
 	if err := dec.Decode(&regions); err != nil {
+		log.Fatal(err)
+	}
+
+	excludesFile, err := os.Open("excludes.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer excludesFile.Close()
+	dec = json.NewDecoder(excludesFile)
+	if err := dec.Decode(&excludes); err != nil {
 		log.Fatal(err)
 	}
 
@@ -58,6 +72,46 @@ func init() {
 }
 
 func main() {
+	if *removeRegion != "" {
+		picsFile, err := os.Open("pictures.ndjson")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer picsFile.Close()
+
+		dec := json.NewDecoder(picsFile)
+		var entries []Entry
+		for {
+			var entry Entry
+			if err := dec.Decode(&entry); err != nil {
+				if err == io.EOF {
+					break
+				}
+				log.Fatal(err)
+			}
+			if entry.Region != *removeRegion {
+				entries = append(entries, entry)
+			}
+		}
+
+		picsFile.Close()
+		picsFile, err = os.Create("pictures.ndjson")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer picsFile.Close()
+
+		enc := json.NewEncoder(picsFile)
+		for _, entry := range entries {
+			if err := enc.Encode(entry); err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		log.Printf("Removed region %s", *removeRegion)
+		return
+	}
+
 	start := time.Date(2010, time.January, 1, 0, 0, 0, 0, time.UTC)
 	end := time.Date(2025, time.January, 1, 0, 0, 0, 0, time.UTC)
 	step := time.Hour * 24 * 30 * 3
@@ -97,6 +151,10 @@ func main() {
 	sort.Strings(regionOrder)
 
 	for _, region := range regionOrder {
+		if !strings.HasPrefix(region, *regionPrefix) {
+			continue
+		}
+
 		bbox := regions[region]
 		log.Printf("Processing region %s", region)
 
@@ -128,6 +186,7 @@ func main() {
 		pickCount := existingCount
 		if *numberToPredict > 0 {
 			pickCount = 0
+			*numberToIngest = *numberToPredict
 		}
 
 		for n, candidate := range candidates {
@@ -149,11 +208,27 @@ func main() {
 					log.Print("failed to create entry: ", err)
 					continue
 				}
-				pickCount++
+
+				var matchingExclusion string
+				for excludeName, exclude := range excludes {
+					lng, lat := entry.Position()
+					if lng >= exclude[0] && lng <= exclude[2] && lat >= exclude[1] && lat <= exclude[3] {
+						matchingExclusion = excludeName
+						break
+					}
+				}
+
+				if matchingExclusion != "" {
+					log.Printf("Skipping %s due to exclusion zone %s", entry.Id, matchingExclusion)
+					continue
+				}
+
 				if err := picsEnc.Encode(entry); err != nil {
 					log.Fatal(err)
 				}
 			}
+
+			pickCount++
 
 			log.Printf("%s: picked %d of %d (%0.0f%%), scanned %d of %d (%0.0f%%), pick ratio %0.0f%%",
 				region,
@@ -246,6 +321,20 @@ type Entry struct {
 	LocationAccuracy    string        `json:"locationAccuracy"`
 	LocationDescription string        `json:"locationDescription"`
 	Webpage             string        `json:"url"`
+}
+
+func (e Entry) Position() (float64, float64) {
+	lat := 0.0
+	sscanf, err := fmt.Sscanf(e.Latitude, "%f", &lat)
+	if err != nil {
+		log.Fatal(sscanf, err)
+	}
+	lng := 0.0
+	sscanf, err = fmt.Sscanf(e.Longitude, "%f", &lng)
+	if err != nil {
+		log.Fatal(sscanf, err)
+	}
+	return lng, lat
 }
 
 func createEntry(region string, id string) (entry Entry, err error) {

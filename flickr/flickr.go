@@ -71,6 +71,7 @@ func Call(method string, resp any, params map[string]string) error {
 		Path:     "/services/rest",
 		RawQuery: query.Encode(),
 	}
+	//log.Println(r.String())
 
 	cacheQuery, err := url.ParseQuery(query.Encode())
 	if err != nil {
@@ -171,6 +172,30 @@ Available sizes:
 func SourceURL(photo Photo, size string) string {
 	// https://live.staticflickr.com/{server-id}/{id}_{secret}_{size-suffix}.jpg
 	return "https://live.staticflickr.com/" + photo.Server + "/" + photo.ID + "_" + photo.Secret + "_" + size + ".jpg"
+}
+
+func SourceURLFromID(id string, size string) string {
+	var details struct {
+		Photo struct {
+			ID     string `json:"id"`
+			Server string `json:"server"`
+			Secret string `json:"secret"`
+		} `json:"photo"`
+	}
+	err := Call("flickr.photos.getInfo", &details, map[string]string{
+		"photo_id": id,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	photo := Photo{
+		ID:     id,
+		Server: details.Photo.Server,
+		Secret: details.Photo.Secret,
+	}
+
+	return SourceURL(photo, size)
 }
 
 func hash(s string) uint64 {
