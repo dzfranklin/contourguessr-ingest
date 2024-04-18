@@ -9,6 +9,7 @@
 <h1 id="header"></h1>
 
 <img id="img"/>
+<link rel="preload" as="image" id="nextImg"/>
 
 <div>
     <a id="imgPage">Image webpage</a>
@@ -21,6 +22,7 @@
 
     const headerElem = document.getElementById('header');
     const imgElem = document.getElementById('img');
+    const nextImgElem = document.getElementById('nextImg');
     const imgPageElem = document.getElementById('imgPage');
     const submitBtn = document.getElementById('submitBtn');
 
@@ -42,6 +44,10 @@
         headerElem.innerText = `Candidate ${currIndex + 1}/${batch.length}`;
         imgElem.src = candidate.source;
         imgPageElem.href = candidate.webpage;
+
+        if (currIndex + 1 < batch.length) {
+            nextImgElem.href = batch[currIndex + 1].source;
+        }
     }
 
     addEventListener('keydown', (event) => {
