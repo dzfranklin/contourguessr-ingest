@@ -113,9 +113,10 @@ func main() {
 		// Search for candidates
 		var candidates []flickr.Photo
 		for year := 2023; year >= 2019; year-- {
-			for month := 12; month >= 1; month = month - 3 {
+			stepSize := 3
+			for month := 12; month >= 1; month = month - stepSize {
 				start := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
-				end := start.AddDate(0, 1, 0)
+				end := start.AddDate(0, stepSize, 0)
 
 				bbox := region.BBox
 				if *noBbox {
