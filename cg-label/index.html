@@ -33,7 +33,7 @@
         currIndex++;
 
         if (currIndex >= batch.length) {
-            headerElem.innerText = 'All done!';
+            headerElem.innerText = 'Done labelling, submitting...';
             imgElem.src = "";
             imgPageElem.href = "";
             doSubmit();
@@ -50,7 +50,7 @@
         }
     }
 
-    addEventListener('keydown', (event) => {
+    addEventListener('keypress', (event) => {
         if (event.key === 'y') {
             labels.push({
                 photo: batch[currIndex],

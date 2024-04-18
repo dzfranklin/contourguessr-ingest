@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"sort"
+	"sync"
 )
 
 var trainedFile = "./trained.ndjson"
@@ -109,8 +110,15 @@ func main() {
 		log.Fatal("Failed to load tags")
 	}
 
+	var mu sync.Mutex
+
+	totalLabelled := 0
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		defer mu.Unlock()
+
 		switch r.Method {
 		case http.MethodGet:
 			htmlFile, err := os.Open("cg-label/index.html")
@@ -171,7 +179,8 @@ func main() {
 				pushTrained(trainedEnc, entry.Photo.ID)
 			}
 
-			log.Printf("Tagged %d images", len(payload))
+			totalLabelled += len(payload)
+			log.Printf("%d images tagged", totalLabelled)
 		}
 	})
 
@@ -215,7 +224,7 @@ func selectBatchPayload() string {
 	for _, entry := range batch {
 		entry.Title = "" // hack to avoid properly escaping as we don't need
 		batchPayload = append(batchPayload, batchPayloadEntry{
-			Source:  flickr.SourceURL(entry, "w"),
+			Source:  flickr.SourceURL(entry, "c"),
 			Webpage: "https://www.flickr.com/photos/" + entry.Owner + "/" + entry.ID,
 			Photo:   entry,
 		})
