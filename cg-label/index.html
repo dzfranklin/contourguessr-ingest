@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+
+<div style="margin-bottom:4em">
+    <button id="submitBtn">Submit labels</button>
+</div>
+
+<h1 id="header"></h1>
+
+<img id="img"/>
+
+<div>
+    <a id="imgPage">Image webpage</a>
+</div>
+
+
+<script>
+    const batchPayload = '{{ batchPayload }}';
+    const batch = JSON.parse(batchPayload);
+
+    const headerElem = document.getElementById('header');
+    const imgElem = document.getElementById('img');
+    const imgPageElem = document.getElementById('imgPage');
+    const submitBtn = document.getElementById('submitBtn');
+
+    let currIndex = -1;
+    const labels = [];
+
+    function advance() {
+        currIndex++;
+
+        if (currIndex >= batch.length) {
+            headerElem.innerText = 'All done!';
+            imgElem.src = "";
+            imgPageElem.href = "";
+            doSubmit();
+            return;
+        }
+
+        const candidate = batch[currIndex];
+        headerElem.innerText = `Candidate ${currIndex + 1}/${batch.length}`;
+        imgElem.src = candidate.source;
+        imgPageElem.href = candidate.webpage;
+    }
+
+    addEventListener('keydown', (event) => {
+        if (event.key === 'y') {
+            labels.push({
+                photo: batch[currIndex],
+                tag: 'y'
+            });
+            advance();
+        } else if (event.key === 'n') {
+            labels.push({
+                photo: batch[currIndex],
+                tag: 'n'
+            });
+            advance();
+        } else if (event.key === 's') {
+            advance();
+        } else if (event.key === 'u') {
+            labels.pop();
+            currIndex-=2;
+            advance();
+        }
+    });
+
+    submitBtn.addEventListener('click', () => doSubmit());
+
+    function doSubmit() {
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Submitting...';
+        fetch('/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(labels)
+        }).then((res) => {
+            if (res.ok) {
+                window.location.reload();
+            } else {
+                alert('Failed to submit labels');
+            }
+        }).catch((err) => {
+            alert('Failed to submit labels');
+        });
+    }
+
+    advance();
+</script>
+</body>
+</html>
