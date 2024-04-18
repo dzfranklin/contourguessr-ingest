@@ -8,6 +8,7 @@ import (
 	flag "github.com/spf13/pflag"
 	"io"
 	"log"
+	"math/rand"
 	"os"
 	"sort"
 	"strings"
@@ -24,6 +25,7 @@ type Region struct {
 }
 
 var regionFilter = flag.StringP("region-filter", "r", "", "Prefix of region IDs to ingest")
+var perRegionN = flag.IntP("number", "n", 5000, "Number of images to ingest per region")
 
 func init() {
 	regionsFile, err := os.Open("regions.json")
@@ -55,12 +57,14 @@ func init() {
 func main() {
 	alreadyTrained := readTrained()
 
-	var candidates []flickr.Photo
+	var allCandidates []flickr.Photo
 	for _, region := range regionList {
 		if *regionFilter != "" && !strings.HasPrefix(region.Id, *regionFilter) {
 			log.Printf("Skipping %s", region.Id)
 			continue
 		}
+
+		var candidates []flickr.Photo
 
 		// Search for candidates
 		for year := 2023; year >= 2013; year-- {
@@ -90,9 +94,17 @@ func main() {
 				}
 			}
 		}
+
+		log.Printf("Found %d candidates for %s, keeping %d", len(candidates), region.Id, *perRegionN)
+
+		rand.Shuffle(len(candidates), func(i, j int) {
+			candidates[i], candidates[j] = candidates[j], candidates[i]
+		})
+		picks := candidates[:min(*perRegionN, len(candidates))]
+		allCandidates = append(allCandidates, picks...)
 	}
 
-	log.Printf("Found %d candidates", len(candidates))
+	log.Printf("Saving %d candidates to candidates.ndjson", len(allCandidates))
 
 	outFile, err := os.Create("candidates.ndjson")
 	if err != nil {
@@ -100,14 +112,12 @@ func main() {
 	}
 	defer outFile.Close()
 	enc := json.NewEncoder(outFile)
-	for _, photo := range candidates {
+	for _, photo := range allCandidates {
 		err := enc.Encode(photo)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
-
-	log.Println("Wrote to candidates.ndjson")
 }
 
 type trainedFileEntry struct {
