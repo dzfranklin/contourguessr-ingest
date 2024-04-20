@@ -34,18 +34,28 @@ info          jsonb, -- from flickr.photos.getInfo
 sizes         jsonb, -- from flickr.photos.getSizes
 exif          jsonb, -- from flickr.photos.getExif
 raw_exif      jsonb  -- from flickr.photos.getExif
-);
+
+gps_altitude FLOAT GENERATED ALWAYS AS (
+        CASE
+            WHEN exif ->> 'GPSAltitude' LIKE '% m' THEN TRIM((exif ->> 'GPSAltitude'), ' m')::float
+            ELSE NULL
+            END
+        ) STORED
+)
+web_url TEXT GENERATED ALWAYS AS ('https://flickr.com/photos/' || owner || '/' || id) STORED
+medium_src TEXT GENERATED ALWAYS AS ('https://live.staticflickr.com/' || server || '/' || id || '_' || shared_secret || '.jpg') STORED
+small_src TEXT GENERATED ALWAYS AS ('https://live.staticflickr.com/' || server || '/' || id || '_' || shared_secret || '_m.jpg') STORED
 */
 
 var minDate = time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)
 var maxDate = time.Date(2025, time.January, 1, 0, 0, 0, 0, time.UTC)
 
 var regions map[string]string
-var excludes map[string][]float64
 
 var regionPrefixFilter = flag.StringP("region", "r", "", "Prefix of region IDs to ingest")
 var skipRegionPrefixFilter = flag.StringP("skip-region", "s", "", "Prefix of region IDs to skip")
 var hydrateExif = flag.Bool("hydrate-exif", false, "Instead of scraping new photos hydrate exif data")
+var hydrateOneExif = flag.String("hydrate-one-exif", "", "Hydrate exif data for a single photo")
 
 var databaseURL string
 
@@ -57,16 +67,6 @@ func init() {
 	defer regionsFile.Close()
 	dec := json.NewDecoder(regionsFile)
 	if err := dec.Decode(&regions); err != nil {
-		log.Fatal(err)
-	}
-
-	excludesFile, err := os.Open("excludes.json")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer excludesFile.Close()
-	dec = json.NewDecoder(excludesFile)
-	if err := dec.Decode(&excludes); err != nil {
 		log.Fatal(err)
 	}
 
@@ -98,6 +98,23 @@ func main() {
 	err = db.Ping(ctx)
 	if err != nil {
 		log.Fatal("failed to connect to database: ", err)
+	}
+
+	if *hydrateOneExif != "" {
+		exifMap, rawExif := getExif(*hydrateOneExif)
+		exif, err := json.Marshal(exifMap)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if _, err := db.Exec(context.Background(), `UPDATE flickr_photos
+			SET exif = $2, raw_exif = $3
+			WHERE id = $1`,
+			*hydrateOneExif, exif, rawExif,
+		); err != nil {
+			log.Fatal("update ", err)
+		}
+		return
 	}
 
 	if *hydrateExif {
