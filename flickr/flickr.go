@@ -18,7 +18,7 @@ var cacheDir = "/tmp/cg-flickr-cache"
 var flickrAPIKey string
 
 func init() {
-	err := godotenv.Load(".env", ".local.env")
+	err := godotenv.Load(".env", ".env.local")
 	if err != nil {
 		log.Println(err)
 	}

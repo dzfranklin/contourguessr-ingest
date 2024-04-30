@@ -1,11 +1,11 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/jackc/pgx/v4"
 	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
 	flag "github.com/spf13/pflag"
 	"log"
 	"net/http"
@@ -18,7 +18,7 @@ var query = `
 [out:json];
 
 way({{bbox_1}},{{bbox_0}},{{bbox_3}},{{bbox_2}})
-  [highway~"^(service|residential|unclassified|primary|trunk|tertiary|secondary|living_street|raceway|primary_link|rest_area|tertiary_link|road|services)$"];
+  [highway~"^(residential|unclassified|primary|trunk|tertiary|secondary|living_street|raceway|primary_link|rest_area|tertiary_link|road|services)$"];
 
 ( ._; >; );
 
@@ -42,10 +42,24 @@ var badHighways = []string{
 	"services",
 }
 
+/*
+CREATE INDEX roads_line_geom_idx ON roads USING GIST (line_geom);
+*/
+
+/*
+SELECT 100 * (SELECT count(DISTINCT p.id)
+        FROM flickr_photos as p
+                 LEFT JOIN roads as r
+                           ON ST_DWithin(p.geom, r.line_geom, 400)
+        WHERE r IS NULL AND p.region = 'uk_lake_district') /
+       (SELECT count(p.id)
+        FROM flickr_photos as p WHERE p.region = 'uk_lake_district') as pc_good;
+*/
+
 var regionFilter = flag.StringP("region", "r", "", "Prefix of region IDs to ingest")
 
 func init() {
-	err := godotenv.Load(".env", ".local.env")
+	err := godotenv.Load(".env", ".env.local")
 	if err != nil {
 		log.Println(err)
 	}
@@ -54,21 +68,26 @@ func init() {
 }
 
 func main() {
-	db, err := sql.Open("postgres", os.Getenv("POSTGIS_URL"))
+	ctx := context.Background()
+
+	db, err := pgx.Connect(ctx, os.Getenv("INGEST_DB"))
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
-	err = db.Ping()
+	defer db.Close(ctx)
+	err = db.Ping(ctx)
 	if err != nil {
 		log.Fatal("failed to connect to database: ", err)
 	}
-	_, _ = db.Exec("CREATE EXTENSION IF NOT EXISTS postgis")
-	_, err = db.Exec("DROP TABLE IF EXISTS bad_features")
+	_, err = db.Exec(ctx, "DROP TABLE IF EXISTS roads")
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, err = db.Exec("CREATE TABLE bad_features (id SERIAL PRIMARY KEY, osm_id TEXT, geom GEOGRAPHY)")
+	_, err = db.Exec(ctx, `CREATE TABLE roads (
+    	id SERIAL PRIMARY KEY,
+    	osm_id TEXT,
+    	line_geom GEOGRAPHY
+	)`)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -111,6 +130,8 @@ func main() {
 			}
 		}
 
+		var batch pgx.Batch
+
 		for _, way := range ways {
 			if !contains(badHighways, way.Tags.Highway) {
 				continue
@@ -126,13 +147,20 @@ func main() {
 				points = append(points, fmt.Sprintf("ST_Point(%f,%f,4326)", node.Lon, node.Lat))
 			}
 
-			_, err = db.Exec(fmt.Sprintf("INSERT INTO bad_features (osm_id, geom) VALUES (%d, ST_MakeLine(ARRAY[%s])::geography)",
-				way.ID,
-				strings.Join(points, ",")))
-			if err != nil {
+			batch.Queue(fmt.Sprintf("INSERT INTO roads (osm_id, line_geom) VALUES (%d, ST_MakeLine(ARRAY[%s])::geography)",
+				way.ID, strings.Join(points, ",")))
+		}
+
+		results := db.SendBatch(ctx, &batch)
+		for i := 0; i < batch.Len(); i++ {
+			if _, err := results.Exec(); err != nil {
 				log.Fatal(err)
 			}
 		}
+		if err := results.Close(); err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("Inserted %d roads", batch.Len())
 	}
 }
 

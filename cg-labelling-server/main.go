@@ -37,7 +37,7 @@ var indexHTML string
 var listHTML string
 
 func main() {
-	err := godotenv.Load(".env", ".local.env")
+	err := godotenv.Load(".env", ".env.local")
 	if err != nil {
 		log.Println("failed to load dotenv file(s): ", err)
 	}
@@ -139,7 +139,22 @@ func getListHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	batch, err := listLabelled(r.Context(), page)
+	labelS := r.URL.Query().Get("label")
+	var label *bool
+	if labelS != "" && labelS != "all" {
+		label = new(bool)
+		switch labelS {
+		case "all":
+		case "positive":
+			*label = true
+		case "negative":
+			*label = false
+		default:
+			http.Error(w, fmt.Sprintf("invalid parameter label: %s", labelS), http.StatusBadRequest)
+		}
+	}
+
+	batch, err := listLabelled(r.Context(), page, label)
 	if err != nil {
 		log.Println("error in listLabelled: ", err)
 		http.Error(w, fmt.Sprintf("%s", err), http.StatusInternalServerError)
@@ -161,16 +176,27 @@ type LabelledListEntry struct {
 	SmallSrc   string `json:"small_src"`
 }
 
-func listLabelled(ctx context.Context, page int) (batch []LabelledListEntry, err error) {
+func listLabelled(ctx context.Context, page int, label *bool) (batch []LabelledListEntry, err error) {
 	pageSize := 50
 	var rows pgx.Rows
-	rows, err = pool.Query(ctx, `
+	if label != nil {
+		rows, err = pool.Query(ctx, `
+SELECT l.is_positive, p.id, p.region, p.web_url, p.small_src
+FROM labels as l
+         INNER JOIN flickr_photos p on p.id = l.flickr_photo_id
+WHERE l.is_positive = $3
+ORDER BY l.created_at DESC
+LIMIT $1
+OFFSET $1::int * $2::int`, pageSize, page, *label)
+	} else {
+		rows, err = pool.Query(ctx, `
 SELECT l.is_positive, p.id, p.region, p.web_url, p.small_src
 FROM labels as l
          INNER JOIN flickr_photos p on p.id = l.flickr_photo_id
 ORDER BY l.created_at DESC
 LIMIT $1
 OFFSET $1::int * $2::int`, pageSize, page)
+	}
 	if err != nil {
 		return
 	}

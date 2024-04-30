@@ -1,4 +1,4 @@
-.local.env
+*.local
 .idea
 /trained.ndjson
 /pictures.ndjson

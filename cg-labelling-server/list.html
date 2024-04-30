@@ -12,6 +12,12 @@
 </div>
 
 <div>
+    <select id="labelSel">
+        <option value="negative">Negative</option>
+        <option value="positive">Positive</option>
+        <option value="all">All</option>
+    </select>
+
     <button class="prevBtn">Previous page</button>
     <button class="nextBtn">Next page</button>
 </div>
@@ -59,9 +65,21 @@
 </style>
 
 <script>
-    let page = 0;
-    let stats;
-    let data;
+    const queryParams = new URLSearchParams(window.location.search);
+    let page = parseInt(queryParams.get('page')) || 0;
+    let labelFilter = queryParams.get('labelFilter') || 'all';
+
+    function updateQuery(newParams) {
+        const newQueryParams = new URLSearchParams(window.location.search);
+        for (const [key, value] of Object.entries(newParams)) {
+            newQueryParams.set(key, value);
+        }
+        console.log(newQueryParams.toString());
+        window.location.search = newQueryParams.toString();
+    }
+
+    let stats = {};
+    let data = [];
 
     function render() {
         const statsElem = document.querySelector('.stats');
@@ -99,30 +117,26 @@
             imgPageElem.innerText = 'View on flickr';
             detailsElem.appendChild(imgPageElem);
 
+            imgElem.onclick = function() {
+                prompt("Copy to clipboard: Ctrl+C, Enter", item.id);
+            }
+
             listElem.appendChild(li);
         });
     }
 
-    function updateData() {
-        fetch('/api/v0/list?page=' + page)
-            .then(response => response.json())
-            .then(json => {
-                data = json;
-                render();
-            });
-    }
-
     document.querySelectorAll('.prevBtn').forEach(btn => {
         btn.addEventListener('click', () => {
-            page--;
-            updateData();
+            updateQuery({page: page-1})
         });
     });
     document.querySelectorAll('.nextBtn').forEach(btn => {
         btn.addEventListener('click', () => {
-            page++;
-            updateData();
+            updateQuery({page: page+1})
         });
+    });
+    document.querySelector('#labelSel').addEventListener('change', (e) => {
+        updateQuery({page: 0, labelFilter: e.target.value});
     });
 
     fetch('/api/v0/stats')
@@ -132,7 +146,12 @@
             render();
         });
 
-    updateData();
+    fetch('/api/v0/list?page=' + page + '&label=' + labelFilter)
+        .then(response => response.json())
+        .then(json => {
+            data = json;
+            render();
+        });
 </script>
 </body>
 </html>

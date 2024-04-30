@@ -22,7 +22,7 @@ var urlToReport = flag.StringP("url", "u", "", "Share link to specific challenge
 func init() {
 	// Environment variables
 
-	err := godotenv.Load(".env", ".local.env")
+	err := godotenv.Load(".env", ".env.local")
 	if err != nil {
 		log.Println(err)
 	}
