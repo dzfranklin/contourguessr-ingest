@@ -7,6 +7,7 @@ import (
 	flag "github.com/spf13/pflag"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"sync"
@@ -14,7 +15,7 @@ import (
 )
 
 var dbURL string
-var outDir = "/tmp/cg-training-set"
+var outDir string
 
 func init() {
 	// Environment variables
@@ -32,6 +33,11 @@ func init() {
 	// Flags
 
 	flag.Parse()
+
+	outDir = flag.Arg(0)
+	if outDir == "" {
+		log.Fatal("Usage: cg-prepare-training-set <output-dir>")
+	}
 }
 
 func main() {
@@ -90,7 +96,7 @@ func doDownload(c *http.Client, entry Entry) {
 		return
 	}
 
-	time.Sleep(1000 * time.Millisecond)
+	time.Sleep(time.Duration(100+rand.Intn(400)) * time.Millisecond)
 
 	req, err := http.NewRequest(http.MethodGet, entry.Src, nil)
 	if err != nil {
