@@ -20,7 +20,7 @@ import (
 
 var minInitialDelay = 15 * time.Second
 var maxInitialDelay = 1 * time.Minute
-var indexLoopSleep = time.Minute * 5
+var indexLoopSleepBase = time.Minute*5 + time.Second
 var minDate = time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)
 var minCheckInterval = time.Hour * 24 * 7
 var overlapPeriod = time.Hour * 24
@@ -45,7 +45,7 @@ func main() {
 
 	if os.Getenv("DEBUG_SHORT_DELAYS") != "" {
 		maxInitialDelay = 5 * time.Second
-		indexLoopSleep = 15 * time.Second
+		indexLoopSleepBase = 15 * time.Second
 	}
 
 	databaseURL = os.Getenv("DATABASE_URL")
@@ -74,6 +74,7 @@ func main() {
 		doIndex()
 		log.Println("completed index run")
 
+		indexLoopSleep := indexLoopSleepBase + time.Duration(rand.Intn(30))*time.Second
 		log.Printf("sleeping for %s", indexLoopSleep)
 		time.Sleep(indexLoopSleep)
 	}
