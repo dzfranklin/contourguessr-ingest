@@ -124,6 +124,9 @@ func doIndex() {
 		stepSize := time.Hour * 24 * 300
 		for stepStart := startDate; !stepStart.After(indexTime); stepStart = stepStart.Add(stepSize) {
 			stepEnd := stepStart.Add(stepSize)
+			if stepEnd.After(indexTime) {
+				stepEnd = indexTime
+			}
 			log.Printf("Downloading region %d %s to %s", region.RegionID, stepStart, stepEnd)
 			for page := 1; ; page++ {
 				resp, err := callFlickrSearch(bbox, stepStart, stepEnd, page)
@@ -211,7 +214,7 @@ type regionProgress struct {
 
 func listRegions() ([]regionProgress, error) {
 	rows, err := db.Query(context.Background(), `
-		SELECT r.id, p.latest_seen, r.min_lng, r.min_lat, r.max_lng, r.max_lat
+		SELECT r.id, p.latest_request, r.min_lng, r.min_lat, r.max_lng, r.max_lat
 		FROM regions as r
 		LEFT JOIN flickr_indexer_progress as p ON r.id = p.region_id
 `)
@@ -259,9 +262,9 @@ func savePhoto(id string, lng, lat float64, accuracy int, summary json.RawMessag
 
 func updateProgress(regionID int, latestRequest time.Time) error {
 	_, err := db.Exec(context.Background(), `
-		INSERT INTO flickr_indexer_progress (region_id, latest_seen)
+		INSERT INTO flickr_indexer_progress (region_id, latest_request)
 		VALUES ($1, $2)
-		ON CONFLICT (region_id) DO UPDATE SET latest_seen = $2
+		ON CONFLICT (region_id) DO UPDATE SET latest_request = $2
 	`, regionID, latestRequest)
 	return err
 }

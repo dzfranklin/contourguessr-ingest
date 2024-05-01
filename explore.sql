@@ -1,17 +1,20 @@
 SELECT *
 FROM regions;
 
-SELECT r.id, r.name, count(p) as count, max(fip.latest_seen) as latest_seen
+SELECT r.id, r.name, count(p) as count, fip.latest_request
 FROM flickr_photos as p
          RIGHT JOIN regions as r ON p.region_id = r.id
          LEFT JOIN flickr_indexer_progress fip on r.id = fip.region_id
-GROUP BY r.id
-ORDER BY count DESC;
+GROUP BY r.id, fip.latest_request
+ORDER BY fip.latest_request DESC;
 
 SELECT count(*)
 FROM flickr_photos;
 
-SELECT * FROM flickr_photos ORDER BY random() LIMIT 10;
+SELECT *
+FROM flickr_photos
+ORDER BY random()
+LIMIT 10;
 
 SELECT 'https://flickr.com/' || (summary ->> 'owner') || '/' || (summary ->> 'id')
 FROM flickr_photos
@@ -21,10 +24,10 @@ LIMIT 10;
 ---
 
 -- Count by month by region
-SELECT r.name, (date_part('month', (p.summary->>'datetaken')::timestamp)) as month, count(*)
+SELECT r.name, (date_part('month', (p.summary ->> 'datetaken')::timestamp)) as month, count(*)
 FROM flickr_photos as p
          RIGHT JOIN regions as r ON p.region_id = r.id
-WHERE p.summary->>'datetaken' != '0000-00-00 00:00:00'
+WHERE p.summary ->> 'datetaken' != '0000-00-00 00:00:00'
 GROUP BY r.id, month
 ORDER BY r.id, month;
 
@@ -46,12 +49,11 @@ ORDER BY geo_accuracy DESC;
 SELECT count(DISTINCT
              (round(ST_Y(geo::geometry)::numeric, 2),
               round(ST_X(geo::geometry)::numeric, 2))) as trunc_count,
-    count(*) as total
+       count(*)                                        as total
 FROM flickr_photos;
 
-SELECT
-    round(ST_X(geo::geometry)::numeric, 2) as lon,
-    round(ST_Y(geo::geometry)::numeric, 2) as lat,
-    count(*) as count
+SELECT round(ST_X(geo::geometry)::numeric, 2) as lon,
+       round(ST_Y(geo::geometry)::numeric, 2) as lat,
+       count(*)                               as count
 FROM flickr_photos
 GROUP BY lat, lon;
