@@ -96,7 +96,7 @@ func doIndex() {
 			continue
 		}
 
-		if region.LatestSeen.Valid && time.Since(region.LatestSeen.Time) < minCheckInterval {
+		if region.LatestRequest.Valid && time.Since(region.LatestRequest.Time) < minCheckInterval {
 			log.Printf("Skipping %+v", region)
 			continue
 		}
@@ -104,11 +104,11 @@ func doIndex() {
 		bbox := fmt.Sprintf("%f,%f,%f,%f", region.MinLng, region.MinLat, region.MaxLng, region.MaxLat)
 
 		var startDate time.Time
-		if !region.LatestSeen.Valid {
+		if !region.LatestRequest.Valid {
 			log.Printf("No progress for region %d, starting from %s", region.RegionID, minDate)
 			startDate = minDate
 		} else {
-			startDate = region.LatestSeen.Time.Add(-overlapPeriod)
+			startDate = region.LatestRequest.Time.Add(-overlapPeriod)
 			log.Printf("Resuming region %d from %s", region.RegionID, startDate)
 			if startDate.Before(minDate) {
 				startDate = minDate
@@ -120,7 +120,7 @@ func doIndex() {
 		// low hundreds of pages. This is clumsy but ends up working for our region sizes.
 		// By searching in a step that doesn't line up with seasons we ensure in the long run the distribution is okay.
 
-		latestSeen := startDate
+		latestRequest := startDate
 		stepSize := time.Hour * 24 * 300
 		for stepStart := startDate; !stepStart.After(indexTime); stepStart = stepStart.Add(stepSize) {
 			stepEnd := stepStart.Add(stepSize)
@@ -146,8 +146,8 @@ func doIndex() {
 					}
 					dateUpload := time.Unix(dateUploadInt, 0)
 
-					if dateUploadInt > latestSeen.Unix() {
-						latestSeen = dateUpload
+					if dateUploadInt > latestRequest.Unix() {
+						latestRequest = dateUpload
 					}
 
 					lng, err := strconv.ParseFloat(p.Longitude, 64)
@@ -181,7 +181,7 @@ func doIndex() {
 					}
 				}
 
-				err = updateProgress(region.RegionID, latestSeen)
+				err = updateProgress(region.RegionID, latestRequest)
 				if err != nil {
 					log.Fatal("failed to update progress", err)
 				}
@@ -190,17 +190,23 @@ func doIndex() {
 					break
 				}
 			}
+
+			latestRequest = stepEnd
+			err = updateProgress(region.RegionID, latestRequest)
+			if err != nil {
+				log.Fatal("failed to update progress", err)
+			}
 		}
 	}
 }
 
 type regionProgress struct {
-	RegionID   int
-	LatestSeen sql.NullTime
-	MinLng     float64
-	MinLat     float64
-	MaxLng     float64
-	MaxLat     float64
+	RegionID      int
+	LatestRequest sql.NullTime
+	MinLng        float64
+	MinLat        float64
+	MaxLng        float64
+	MaxLat        float64
 }
 
 func listRegions() ([]regionProgress, error) {
@@ -217,7 +223,7 @@ func listRegions() ([]regionProgress, error) {
 	var regions []regionProgress
 	for rows.Next() {
 		var r regionProgress
-		if err := rows.Scan(&r.RegionID, &r.LatestSeen,
+		if err := rows.Scan(&r.RegionID, &r.LatestRequest,
 			&r.MinLng, &r.MinLat, &r.MaxLng, &r.MaxLat,
 		); err != nil {
 			return nil, err
@@ -251,12 +257,12 @@ func savePhoto(id string, lng, lat float64, accuracy int, summary json.RawMessag
 	return err
 }
 
-func updateProgress(regionID int, latestSeen time.Time) error {
+func updateProgress(regionID int, latestRequest time.Time) error {
 	_, err := db.Exec(context.Background(), `
 		INSERT INTO flickr_indexer_progress (region_id, latest_seen)
 		VALUES ($1, $2)
 		ON CONFLICT (region_id) DO UPDATE SET latest_seen = $2
-	`, regionID, latestSeen)
+	`, regionID, latestRequest)
 	return err
 }
 
