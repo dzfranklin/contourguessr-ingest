@@ -1,5 +1,2 @@
 *.local
 .idea
-/trained.ndjson
-/pictures.ndjson
-/candidates.ndjson
