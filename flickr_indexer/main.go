@@ -186,7 +186,6 @@ func doIndex() {
 				}
 
 				if resp.Photos.Page >= resp.Photos.Pages {
-					log.Printf("Finished region %d after %d pages", region.RegionID, resp.Photos.Page)
 					break
 				}
 			}
