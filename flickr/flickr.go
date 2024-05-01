@@ -15,7 +15,8 @@ import (
 )
 
 var cacheDir = "/tmp/cg-flickr-cache"
-var flickrAPIKey string
+var flickrApiKey string
+var flickrEndpoint *url.URL
 
 func init() {
 	err := godotenv.Load(".env", ".env.local")
@@ -23,9 +24,18 @@ func init() {
 		log.Println(err)
 	}
 
-	flickrAPIKey = os.Getenv("FLICKR_API_KEY")
-	if flickrAPIKey == "" {
+	flickrApiKey = os.Getenv("FLICKR_API_KEY")
+	if flickrApiKey == "" {
 		log.Fatal("FLICKR_API_KEY not set")
+	}
+
+	flickrEndpointS := os.Getenv("FLICKR_ENDPOINT")
+	if flickrEndpointS == "" {
+		log.Fatal("FLICKR_ENDPOINT not set")
+	}
+	flickrEndpoint, err = url.Parse(flickrEndpointS)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
@@ -49,6 +59,12 @@ type Photo struct {
 	Secret string `json:"secret"`
 	Server string `json:"server"`
 	Title  string `json:"title"`
+
+	// only if you requested the extras
+	DateUpload string `json:"dateupload"`
+	Latitude   string `json:"latitude"`
+	Longitude  string `json:"longitude"`
+	Accuracy   string `json:"accuracy"`
 }
 
 var mu sync.Mutex
@@ -56,7 +72,6 @@ var lastCall time.Time
 
 func Call(method string, resp any, params map[string]string) error {
 	params["method"] = method
-	params["api_key"] = flickrAPIKey
 	params["format"] = "json"
 	params["nojsoncallback"] = "1"
 
@@ -65,36 +80,10 @@ func Call(method string, resp any, params map[string]string) error {
 		query.Set(k, v)
 	}
 
-	r := url.URL{
-		Scheme:   "https",
-		Host:     "www.flickr.com",
-		Path:     "/services/rest",
-		RawQuery: query.Encode(),
-	}
-	//log.Println(r.String())
-
-	cacheQuery, err := url.ParseQuery(query.Encode())
-	if err != nil {
-		log.Fatal(err)
-	}
-	cacheQuery.Del("api_key")
-
-	cacheKey := hash(cacheQuery.Encode())
-	cacheFile := fmt.Sprintf("%s/%d.json", cacheDir, cacheKey)
-
-	if _, err := os.Stat(cacheFile); err == nil {
-		file, err := os.Open(cacheFile)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer file.Close()
-
-		err = json.NewDecoder(file).Decode(resp)
-		if err != nil {
-			return err
-		}
-		return nil
-	}
+	r := *flickrEndpoint
+	r.Path = "/services/rest"
+	r.RawQuery = query.Encode()
+	log.Println("flickr: ", r.String())
 
 	mu.Lock()
 	defer mu.Unlock()
@@ -104,7 +93,13 @@ func Call(method string, resp any, params map[string]string) error {
 	}
 	lastCall = time.Now()
 
-	httpResp, err := http.Get(r.String())
+	req, err := http.NewRequest(http.MethodGet, r.String(), nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("X-Api-Key", flickrApiKey)
+
+	httpResp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -117,32 +112,6 @@ func Call(method string, resp any, params map[string]string) error {
 	body, err := io.ReadAll(httpResp.Body)
 	if err != nil {
 		return err
-	}
-
-	var file *os.File
-	var didCreateDir bool
-	for {
-		file, err = os.Create(cacheFile)
-		if err == nil {
-			break
-		}
-
-		if !didCreateDir && os.IsNotExist(err) {
-			err = os.MkdirAll(cacheDir, 0755)
-			if err != nil {
-				log.Fatal(err)
-			}
-			didCreateDir = true
-			continue
-		}
-
-		log.Fatal(err)
-	}
-
-	defer file.Close()
-	_, err = file.Write(body)
-	if err != nil {
-		log.Fatal(err)
 	}
 
 	err = json.Unmarshal(body, &resp)

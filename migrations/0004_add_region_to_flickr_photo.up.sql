@@ -1,0 +1,1 @@
+ALTER TABLE flickr_photos ADD COLUMN region_id INTEGER REFERENCES regions(id) ON DELETE CASCADE;

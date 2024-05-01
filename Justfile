@@ -7,5 +7,5 @@ create-migration name:
   migrate create -ext sql -dir migrations -seq -digits 4 {{name}}
 
 migrate-prod *args:
-  echo "Migrating $INGEST_DB"
-  migrate -path ./migrations -database $INGEST_DB {{args}}
+  echo "Migrating $DATABASE_URL"
+  migrate -path ./migrations -database $DATABASE_URL {{args}}
