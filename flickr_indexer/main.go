@@ -227,6 +227,8 @@ func listRegions() ([]regionProgress, error) {
 }
 
 func queryPointInsideRegion(lng, lat float64, region regionProgress) (bool, error) {
+	// It's a bit silly to do a whole database round trip just for this but there
+	// isn't a good go library that supports this check.
 	row := db.QueryRow(context.Background(), `
 		SELECT ST_Covers(geo, ST_Point($1, $2, 4326))
 		FROM regions
