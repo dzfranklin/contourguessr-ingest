@@ -14,7 +14,6 @@ import (
 	"time"
 )
 
-var cacheDir = "/tmp/cg-flickr-cache"
 var flickrApiKey string
 var flickrEndpoint *url.URL
 
