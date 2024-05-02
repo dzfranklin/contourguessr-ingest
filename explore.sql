@@ -69,32 +69,42 @@ FROM photo_scores as s
          LEFT JOIN flickr_photos as p ON s.flickr_photo_id = p.flickr_id
 ORDER BY updated_at DESC;
 
-SELECT count(*)                                                                                            as total,
-       count(*) filter (where validity_score > 0.5 and not road_within_1000m)                              as accept,
-       round(100.0 * count(*) filter (where validity_score > 0.5 and not road_within_1000m) / count(*), 2) as pc_accept,
-       count(*) filter (where not road_within_1000m)                                                       as no_road,
-       round(100.0 * count(*) filter (where not road_within_1000m) / count(*),
-             2)                                                                                            as pc_no_road,
-       count(*) filter (where validity_score > 0.5)                                                        as valid,
-       round(100.0 * count(*) filter (where validity_score > 0.5) / (count(*)), 2)                         as pc_valid,
-       count(*) filter (where validity_score is not null)                                                  as validity_scored
-FROM photo_scores;
+SELECT count(p.flickr_id)                                                 as total,
+       count(s.flickr_photo_id)                                           as scored,
+       round(100.0 * count(s.flickr_photo_id) / count(p.flickr_id), 2)    as pc_scored,
+       count(s.flickr_photo_id)
+       filter (where validity_score > 0.5 and not road_within_1000m)      as accept,
+       round(100.0 * count(s.flickr_photo_id) filter (where validity_score > 0.5 and not road_within_1000m) /
+             count(s.flickr_photo_id),
+             2)                                                           as pc_accept,
+       count(s.flickr_photo_id) filter (where not road_within_1000m)      as no_road,
+       round(100.0 * count(s.flickr_photo_id) filter (where not road_within_1000m) / count(s.flickr_photo_id),
+             2)                                                           as pc_no_road,
+       count(s.flickr_photo_id) filter (where validity_score > 0.5)       as valid,
+       round(100.0 * count(s.flickr_photo_id) filter (where validity_score > 0.5) / (count(s.flickr_photo_id)),
+             2)                                                           as pc_valid,
+       count(s.flickr_photo_id) filter (where validity_score is not null) as validity_scored
+FROM flickr_photos as p
+         LEFT JOIN photo_scores as s ON s.flickr_photo_id = p.flickr_id;
 
-SELECT r.name,
-       count(s.id)                                                   as total,
+SELECT r.id,
+       r.name,
+       count(p.flickr_id)                                              as total,
+       count(s.flickr_photo_id)                                        as scored,
+       round(100.0 * count(s.flickr_photo_id) / count(p.flickr_id), 2) as pc_scored,
        count(s.id)
-       filter (where validity_score > 0.5 and not road_within_1000m) as accept,
+       filter (where validity_score > 0.5 and not road_within_1000m)   as accepted,
        round(100.0 * count(s.id) filter (where validity_score > 0.5 and not road_within_1000m) / count(s.id),
-             2)                                                      as pc_accept,
-       count(s.id) filter (where not road_within_1000m)              as no_road,
+             2)                                                        as pc_accept,
+       count(s.id) filter (where not road_within_1000m)                as no_road,
        round(100.0 * count(*) filter (where not road_within_1000m) / count(s.id),
-             2)                                                      as pc_no_road,
-       count(s.id) filter (where validity_score > 0.5)               as valid,
+             2)                                                        as pc_no_road,
+       count(s.id) filter (where validity_score > 0.5)                 as valid,
        round(100.0 * count(s.id) filter (where validity_score > 0.5) / (count(s.id)),
-             2)                                                      as pc_valid,
-       count(s.id) filter (where validity_score is not null)            as validity_scored
-FROM photo_scores as s
-         LEFT JOIN flickr_photos as p ON s.flickr_photo_id = p.flickr_id
+             2)                                                        as pc_valid,
+       count(s.id) filter (where validity_score is not null)           as validity_scored
+FROM flickr_photos as p
+         LEFT JOIN photo_scores as s ON s.flickr_photo_id = p.flickr_id
          LEFT JOIN regions as r ON p.region_id = r.id
 GROUP BY r.id
 ORDER BY pc_accept DESC;
