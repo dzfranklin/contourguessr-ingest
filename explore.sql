@@ -57,3 +57,44 @@ SELECT round(ST_X(geo::geometry)::numeric, 2) as lon,
        count(*)                               as count
 FROM flickr_photos
 GROUP BY lat, lon;
+
+---
+
+SELECT 'https://flickr.com/' || (p.summary ->> 'owner') || '/' || p.flickr_id,
+       s.road_within_1000m,
+       s.validity_score,
+       s.validity_model,
+       s.updated_at
+FROM photo_scores as s
+         LEFT JOIN flickr_photos as p ON s.flickr_photo_id = p.flickr_id
+ORDER BY updated_at DESC;
+
+SELECT count(*)                                                                                            as total,
+       count(*) filter (where validity_score > 0.5 and not road_within_1000m)                              as accept,
+       round(100.0 * count(*) filter (where validity_score > 0.5 and not road_within_1000m) / count(*), 2) as pc_accept,
+       count(*) filter (where not road_within_1000m)                                                       as no_road,
+       round(100.0 * count(*) filter (where not road_within_1000m) / count(*),
+             2)                                                                                            as pc_no_road,
+       count(*) filter (where validity_score > 0.5)                                                        as valid,
+       round(100.0 * count(*) filter (where validity_score > 0.5) / (count(*)), 2)                         as pc_valid,
+       count(*) filter (where validity_score is not null)                                                  as validity_scored
+FROM photo_scores;
+
+SELECT r.name,
+       count(s.id)                                                   as total,
+       count(s.id)
+       filter (where validity_score > 0.5 and not road_within_1000m) as accept,
+       round(100.0 * count(s.id) filter (where validity_score > 0.5 and not road_within_1000m) / count(s.id),
+             2)                                                      as pc_accept,
+       count(s.id) filter (where not road_within_1000m)              as no_road,
+       round(100.0 * count(*) filter (where not road_within_1000m) / count(s.id),
+             2)                                                      as pc_no_road,
+       count(s.id) filter (where validity_score > 0.5)               as valid,
+       round(100.0 * count(s.id) filter (where validity_score > 0.5) / (count(s.id)),
+             2)                                                      as pc_valid,
+       count(s.id) filter (where validity_score is not null)            as validity_scored
+FROM photo_scores as s
+         LEFT JOIN flickr_photos as p ON s.flickr_photo_id = p.flickr_id
+         LEFT JOIN regions as r ON p.region_id = r.id
+GROUP BY r.id
+ORDER BY pc_accept DESC;
