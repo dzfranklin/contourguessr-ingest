@@ -1,0 +1,26 @@
+{{ define "title" }}Overview{{ end }}
+
+{{ define "content" }}
+  <table>
+    <thead>
+    <tr>
+      <th>Region</th>
+      <th>Indexed</th>
+      <th>Scored</th>
+      <th>Accepted</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{ range .Counts }}
+      <tr>
+        <td>{{ .Name }} ({{ .RegionID }})</td>
+        <td>{{ .Indexed }}</td>
+        <td>{{ .Scored }} ({{ percent .Scored .Indexed }} of indexed)</td>
+        <td>{{ .Accepted }} ({{ percent .Accepted .Indexed }} of indexed, {{ percent .Accepted .Scored}} of scored)</td>
+      </tr>
+    {{ end }}
+    </tbody>
+  </table>
+{{ end }}
+
+{{ template "layout.tmpl.html" . }}

@@ -2,10 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>{{ template "title" . }}</title>
+    {{ define "title" }}{{ end }}
+  <title>{{ template "title" . }} - CG Admin</title>
 
   <style>
-      html, body {
+      * {
+          box-sizing: border-box;
+      }
+
+      html {
           height: 100%;
           margin: 0;
           padding: 0;
@@ -15,12 +20,15 @@
           display: grid;
           grid-template-rows: min-content minmax(0, 1fr);
           grid-template-columns: minmax(0, 1fr);
+          min-height: 100%;
+          margin: 0;
+          padding: 0.5rem;
       }
 
       #layout-header {
           display: flex;
           align-items: baseline;
-          margin: 0.5rem;
+          margin: 0;
       }
 
       #layout-header .nav {
@@ -35,14 +43,53 @@
       #layout-header .nav a, #layout-header .nav a:visited {
           color: #0070E0;
       }
+
+      #layout-content {
+          margin: 0.5rem 0;
+      }
+
+      #layout-footer {
+          display: flex;
+          margin: 0;
+      }
+
+      .layout-footer--timing {
+          margin-left: auto;
+          font-size: 0.9rem;
+          color: #666;
+      }
+
+      table {
+          width: 100%;
+          border-collapse: collapse;
+          overflow: auto;
+      }
+
+      table th {
+          background-color: #f2f2f2;
+      }
+
+      table td, th {
+          padding: 0.5rem;
+          border: 1px solid #ddd;
+      }
+
+      table tr:nth-child(odd) {
+          background-color: #f9f9f9;
+      }
+
+      table tr:hover {
+          background-color: #f1f1f1;
+      }
   </style>
 
+    {{ define "styles" }}{{ end }}
     {{ template "styles" . }}
 </head>
 <body>
 <nav id="layout-header">
   <ul class="nav">
-      {{ range .NavEntries }}
+      {{ range .LayoutNavEntries }}
         <li>
             {{ if .IsCurrent }}
               <span class="nav--current">{{.Title}}</span>
@@ -58,6 +105,36 @@
     {{ template "content" . }}
 </main>
 
+<footer id="layout-footer">
+  <span class="layout-footer--timing">
+    Response generated in <span id="timing-total"></span>
+  </span>
+</footer>
+
+<script>
+    addEventListener('DOMContentLoaded', () => {
+        let value;
+        for (const node of document.childNodes) {
+            if (node.nodeName !== '#comment') {
+                continue
+            }
+            const rawValue = node.nodeValue.match(/^\s*timingMiddleware:(.+)\s*$/)
+            if (!rawValue) {
+                console.log(node.nodeValue)
+                continue
+            }
+            value = JSON.parse(rawValue[1])
+            break;
+        }
+        if (!value) {
+            return
+        }
+
+        document.getElementById('timing-total').textContent = `${value.total_text}`;
+    });
+</script>
+
+{{ define "scripts" }}{{ end }}
 {{ template "scripts" . }}
 </body>
 </html>

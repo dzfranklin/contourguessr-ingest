@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: flickr-indexer
-          image: ghcr.io/dzfranklin/cg-flickr-indexer:v0.10
+          image: ghcr.io/dzfranklin/cg-flickr-indexer:v0.11
           env:
             - name: FLICKR_API_KEY
               valueFrom:

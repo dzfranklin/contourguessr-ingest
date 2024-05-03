@@ -3,12 +3,15 @@ package routes
 import (
 	"context"
 	"embed"
+	"encoding/json"
+	"fmt"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 var Db *pgxpool.Pool
@@ -29,7 +32,16 @@ type navEntry struct {
 	IsCurrent bool
 }
 
-func init() {
+var funcMap = template.FuncMap{
+	"percent": func(numerator, denominator int) string {
+		if denominator == 0 {
+			return "0.00%"
+		}
+		return fmt.Sprintf("%.2f%%", float64(numerator)/float64(denominator)*100)
+	},
+}
+
+func Mux() http.Handler {
 	appEnv = os.Getenv("APP_ENV")
 
 	routeTemplates = make(map[string]*template.Template)
@@ -43,20 +55,27 @@ func init() {
 			!strings.HasSuffix(name, ".tmpl.html") {
 			continue
 		}
-		tmpl, err := template.ParseFS(templateFS, "layout.tmpl.html", name)
+		tmpl, err := prepareEmptyTemplate(name).ParseFS(templateFS, "layout.tmpl.html", name)
 		if err != nil {
 			log.Fatalf("Error parsing template %s with layout: %v", name, err)
 		}
+		tmpl.Funcs(funcMap)
 		routeTemplates[name] = tmpl
 	}
 
 	navEntries = []navEntry{
 		{Path: "/", Title: "Home"},
+		{Path: "/overview", Title: "Overview"},
 		{Path: "/plot", Title: "Plot"},
 	}
 
-	http.HandleFunc("/", indexHandler)
-	http.HandleFunc("/plot", plotHandler)
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/", indexHandler)
+	mux.HandleFunc("/overview", overviewHandler)
+	mux.HandleFunc("/plot", plotHandler)
+
+	return timingMiddleware(mux)
 }
 
 func templateResponse(w http.ResponseWriter, r *http.Request, name string, data M) {
@@ -69,11 +88,12 @@ func templateResponse(w http.ResponseWriter, r *http.Request, name string, data 
 
 	if appEnv == "development" {
 		log.Println("Loading templates directly (dev mode)")
-		tmpl, err = template.ParseFiles("admin/routes/layout.tmpl.html", "admin/routes/"+name)
+		tmpl, err = prepareEmptyTemplate(name).ParseFiles("admin/routes/layout.tmpl.html", "admin/routes/"+name)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		tmpl.Funcs(funcMap)
 	} else {
 		tmpl = routeTemplates[name]
 		if tmpl == nil {
@@ -89,7 +109,7 @@ func templateResponse(w http.ResponseWriter, r *http.Request, name string, data 
 			responseNavEntries[len(responseNavEntries)-1].IsCurrent = true
 		}
 	}
-	data["NavEntries"] = responseNavEntries
+	data["LayoutNavEntries"] = responseNavEntries
 
 	err = tmpl.Execute(w, data)
 	if err != nil {
@@ -99,6 +119,12 @@ func templateResponse(w http.ResponseWriter, r *http.Request, name string, data 
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 		}
 	}
+}
+
+func prepareEmptyTemplate(name string) *template.Template {
+	tmpl := template.New(name)
+	tmpl.Funcs(funcMap)
+	return tmpl
 }
 
 func normalizeNavEntryPath(path string) string {
@@ -134,4 +160,25 @@ func listRegions(ctx context.Context) ([]regionListEntry, error) {
 	}
 
 	return regions, nil
+}
+
+func timingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		next.ServeHTTP(w, r)
+		total := time.Since(start)
+
+		type valueType struct {
+			TotalText string `json:"total_text"`
+		}
+		value := valueType{
+			TotalText: fmt.Sprintf("%s", total),
+		}
+		valueJSON, err := json.Marshal(value)
+		if err != nil {
+			log.Println("Error marshalling timingMiddleware value:", err)
+			return
+		}
+		_, _ = w.Write([]byte(fmt.Sprintf("<!--timingMiddleware:%s-->", valueJSON)))
+	})
 }

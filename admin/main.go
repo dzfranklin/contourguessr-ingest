@@ -55,6 +55,8 @@ func main() {
 	routes.Db = db
 	routes.MaptilerAPIKey = maptilerApiKey
 
+	mux := routes.Mux()
+
 	log.Printf("Listening on %s (APP_ENV=%s)\n", addr, appEnv)
-	log.Fatal(http.ListenAndServe(addr, nil))
+	log.Fatal(http.ListenAndServe(addr, mux))
 }

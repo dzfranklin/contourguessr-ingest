@@ -21,6 +21,8 @@ import (
 // TODO: Fetch exif. Compute elevation over terrain and whether the coordinates match the gps exif data (or if it's present)
 // 		 Update only those new scores keeping the existing ones the same
 
+const activeVsn = 1
+
 var databaseURL string
 var overpassEndpoint string
 var classifierEndpoint string
@@ -129,16 +131,23 @@ type unscoredPhoto struct {
 func loadUnscoredBatch(db *pgx.Conn) ([]unscoredPhoto, error) {
 	ctx := context.Background()
 	rows, err := db.Query(ctx, `
-		SELECT p.flickr_id, summary ->> 'server', summary ->> 'secret',
-		       ST_X(p.geo::geometry), ST_Y(p.geo::geometry)
+		SELECT p.flickr_id,
+			   summary ->> 'server',
+			   summary ->> 'secret',
+			   ST_X(p.geo::geometry),
+			   ST_Y(p.geo::geometry)
 		FROM flickr_photos as p
-				 LEFT JOIN photo_scores as scores on p.flickr_id = scores.flickr_photo_id
-				 LEFT JOIN flickr_photo_fetch_failures as errs on p.flickr_id = errs.flickr_id
-		WHERE scores.flickr_photo_id IS NULL
-		  AND errs.flickr_id IS NULL
+		WHERE not exists (SELECT 1
+						  FROM photo_scores as s
+						  WHERE s.vsn = $1
+							AND flickr_photo_id = p.flickr_id
+							AND s.is_complete)
+		  and not exists (SELECT 1
+						  FROM flickr_photo_fetch_failures as err
+						  WHERE err.flickr_id = p.flickr_id)
 		ORDER BY random()
 		LIMIT 100
-	`)
+	`, activeVsn)
 	if err != nil {
 		return nil, err
 	}
@@ -309,10 +318,10 @@ func saveScore(db *pgx.Conn, flickrId string, roadWithin1000m bool, validity *va
 
 	ctx := context.Background()
 	_, err := db.Exec(ctx, `
-		INSERT INTO photo_scores (flickr_photo_id, road_within_1000m, validity_score, validity_model,
-		                          updated_at)
-		VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
-	`, flickrId, roadWithin1000m, validityScore, validityModel)
+		INSERT INTO photo_scores (vsn, updated_at, flickr_photo_id,
+		                          road_within_1000m, validity_score, validity_model)
+		VALUES ($1, CURRENT_TIMESTAMP, $2, $3, $4, $5)
+	`, activeVsn, flickrId, roadWithin1000m, validityScore, validityModel)
 	return err
 }
 
