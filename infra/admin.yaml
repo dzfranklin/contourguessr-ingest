@@ -3,6 +3,8 @@ kind: Ingress
 metadata:
   name: admin
   namespace: contourguessr
+  labels:
+    app: admin
 spec:
   defaultBackend:
     service:
@@ -13,6 +15,21 @@ spec:
   tls:
     - hosts:
         - cg-admin
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin
+  namespace: contourguessr
+  labels:
+    app: admin
+spec:
+  selector:
+    app: admin
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -33,7 +50,7 @@ spec:
     spec:
       containers:
         - name: admin
-          image: ghcr.io/dzfranklin/cg-admin:v0.2
+          image: ghcr.io/dzfranklin/cg-admin:v0.3
           ports:
             - containerPort: 80
               name: http
