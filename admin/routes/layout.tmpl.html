@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ template "title" . }}</title>
+
+  <style>
+      html, body {
+          height: 100%;
+          margin: 0;
+          padding: 0;
+      }
+
+      body {
+          display: grid;
+          grid-template-rows: min-content minmax(0, 1fr);
+          grid-template-columns: minmax(0, 1fr);
+      }
+
+      #layout-header {
+          display: flex;
+          align-items: baseline;
+          margin: 0.5rem;
+      }
+
+      #layout-header .nav {
+          display: flex;
+          gap: 0.5rem;
+          align-items: baseline;
+          margin: 0;
+          padding: 0;
+          list-style-type: none;
+      }
+
+      #layout-header .nav a, #layout-header .nav a:visited {
+          color: #0070E0;
+      }
+  </style>
+
+    {{ template "styles" . }}
+</head>
+<body>
+<nav id="layout-header">
+  <ul class="nav">
+      {{ range .NavEntries }}
+        <li>
+            {{ if .IsCurrent }}
+              <span class="nav--current">{{.Title}}</span>
+            {{ else }}
+              <a href="{{ .Path }}">{{ .Title }}</a>
+            {{ end }}
+        </li>
+      {{ end }}
+  </ul>
+</nav>
+
+<main id="layout-content">
+    {{ template "content" . }}
+</main>
+
+{{ template "scripts" . }}
+</body>
+</html>

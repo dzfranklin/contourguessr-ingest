@@ -18,6 +18,9 @@ import (
 	"time"
 )
 
+// TODO: Fetch exif. Compute elevation over terrain and whether the coordinates match the gps exif data (or if it's present)
+// 		 Update only those new scores keeping the existing ones the same
+
 var databaseURL string
 var overpassEndpoint string
 var classifierEndpoint string

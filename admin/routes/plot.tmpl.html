@@ -1,0 +1,224 @@
+{{ define "title" }}Plot{{ end }}
+
+{{ define "styles" }}
+  <link href="https://cdn.maptiler.com/maptiler-sdk-js/v2.0.3/maptiler-sdk.css" rel="stylesheet"/>
+
+  <style>
+      #content {
+          display: grid;
+          height: 100%;
+          grid-template-columns: minmax(0, 1fr);
+          grid-template-rows: min-content minmax(0, 1fr);
+      }
+
+      #header {
+          display: flex;
+          align-items: end;
+          gap: 1rem;
+          margin: 0 0.5rem 0.5rem 0.5rem;
+      }
+
+      #map {
+          width: 100%;
+          height: 100%;
+      }
+
+      .kv-table {
+          width: 100%;
+          border-collapse: collapse;
+          overflow: auto;
+      }
+
+      .kv-table td {
+          padding: 0.5rem;
+          border: 1px solid #ddd;
+      }
+
+      .kv-table tr:nth-child(odd) {
+          background-color: #f9f9f9;
+      }
+
+      .kv-table tr:hover {
+          background-color: #f1f1f1;
+      }
+
+      .kv-table td:first-child {
+          font-weight: bold;
+      }
+  </style>
+{{ end }}
+
+{{ define "content" }}
+  <div id="content">
+    <form id="header" autocomplete="off">
+      <select name="region">
+        <option value="" {{ if eq .SelectedRegion "" }}selected{{end}}>Select a region</option>
+          {{ range .Regions }}
+            <option value="{{ .ID }}" {{ if eq (printf "%d" .ID) $.SelectedRegion }}selected{{end}}>{{ .Name }}</option>
+          {{ end }}
+      </select>
+
+      <button type="submit">Update</button>
+
+        {{ if .SelectedRegion }}
+            {{ .ValidCount }} valid,
+            {{ .InvalidCount }} invalid,
+            {{ .TotalCount }} total,
+            ({{ .ValidPercent }} valid)
+        {{ end }}
+    </form>
+
+    <div id="map"></div>
+  </div>
+{{ end }}
+
+{{ define "scripts" }}
+  <script src="https://cdn.maptiler.com/maptiler-sdk-js/v2.0.3/maptiler-sdk.umd.min.js"></script>
+
+  <script>
+      const maptilerAPIKey = {{ .MaptilerAPIKey }};
+      const regionGeoJSON = {{ .RegionGeoJSON }};
+      const regionBBoxJSON = {{ .RegionBBoxJSON }};
+      const pointsJSON = {{ .PointsJSON }};
+  </script>
+
+  <script>
+      const regionBBox = JSON.parse(regionBBoxJSON);
+      const regionGeo = JSON.parse(regionGeoJSON);
+      const points = JSON.parse(pointsJSON);
+
+      maptilersdk.config.apiKey = maptilerAPIKey;
+      const map = new maptilersdk.Map({
+          container: 'map',
+          style: "topo-v2",
+      });
+
+      function kvTableOf(...rows) {
+          const table = document.createElement('table');
+          table.className = 'kv-table';
+          const tbody = document.createElement('tbody');
+          table.append(tbody);
+
+          for (const [key, value] of rows) {
+              const tr = document.createElement('tr');
+              tbody.append(tr);
+
+              const labelEl = document.createElement('td');
+              tr.append(labelEl);
+              if (typeof key === 'string') {
+                  labelEl.innerText = key;
+              } else {
+                  labelEl.append(key);
+              }
+
+              const valueEl = document.createElement('td');
+              tr.append(valueEl);
+              if (typeof value === 'string') {
+                  valueEl.innerText = value;
+              } else {
+                  valueEl.append(value);
+              }
+          }
+
+          return table;
+      }
+
+      map.on('load', () => {
+          map.addSource('region', {
+              type: 'geojson',
+              data: {
+                  type: 'FeatureCollection',
+                  features: [regionBBox, regionGeo].map(geometry => ({
+                      type: 'Feature',
+                      geometry,
+                  })),
+              },
+          });
+
+          map.addSource('points', {
+              type: 'geojson',
+              data: {
+                  type: 'FeatureCollection',
+                  features: points.map(point => ({
+                      type: 'Feature',
+                      geometry: {
+                          type: 'Point',
+                          coordinates: point.geo,
+                      },
+                      properties: point,
+                  })),
+              }
+          });
+
+          map.addLayer({
+              id: 'region',
+              type: 'line',
+              source: 'region',
+              paint: {
+                  'line-color': 'hsla(262,87%,53%,0.3)',
+                  'line-width': 4,
+              },
+          });
+
+          map.addLayer({
+              id: 'points',
+              type: 'circle',
+              source: 'points',
+              paint: {
+                  'circle-radius': [
+                      'interpolate',
+                      ['linear'],
+                      ['zoom'],
+                      0, 2,
+                      10, 4,
+                      14, 10,
+                  ],
+                  'circle-color': [
+                      'interpolate',
+                      ['linear'],
+                      ['get', 'validity_score'],
+                      0, 'hsla(23, 100%, 50%, 0.8)',
+                      1, 'hsla(99,100%,30%,0.8)',
+                  ]
+              },
+          });
+
+          map.on('click', 'points', (e) => {
+              const f = e.features[0];
+              const props = f.properties;
+
+              const elem = document.createElement('div');
+
+              const img = document.createElement('img');
+              elem.append(img);
+              img.src = props.preview_url;
+              img.style.height = '320px';
+
+              const webURLEl = document.createElement('a');
+              webURLEl.href = props.web_url;
+              webURLEl.innerText = props.web_url;
+
+              elem.append(kvTableOf(
+                  ["Web URL", webURLEl],
+                  ["Geo", f.geometry.coordinates.join(', ')],
+                  ["Validity Score", props.validity_score.toFixed(4)],
+                  ["Validity Model", props.validity_model],
+                  ["Score updated at (UTC)", props.score_updated_at],
+              ));
+
+              new maptilersdk.Popup({maxWidth: 'none'})
+                  .setLngLat(f.geometry.coordinates)
+                  .setHTML(elem.innerHTML)
+                  .addTo(map);
+          });
+
+          const bounds = new maptilersdk.LngLatBounds();
+          for (const p of regionBBox.coordinates[0]) {
+              bounds.extend(p);
+          }
+          map.fitBounds(bounds, {padding: 100, animate: false});
+      });
+  </script>
+{{ end }}
+
+{{ template "layout.tmpl.html" . }}

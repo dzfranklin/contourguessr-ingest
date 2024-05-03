@@ -1,0 +1,56 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: admin
+  namespace: contourguessr
+spec:
+  defaultBackend:
+    service:
+      name: admin
+      port:
+        name: http
+  ingressClassName: tailscale
+  tls:
+    - hosts:
+        - cg-admin
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin
+  namespace: contourguessr
+  labels:
+    app: admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admin
+  template:
+    metadata:
+      labels:
+        app: admin
+    spec:
+      containers:
+        - name: admin
+          image: ghcr.io/dzfranklin/cg-admin:v0.2
+          ports:
+            - containerPort: 80
+              name: http
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: cg-database
+                  key: url
+            - name: ADMIN_MAPTILER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: admin-maptiler-api-credentials
+                  key: key
+            - name: APP_ENV
+              value: "production"
+            - name: HOST
+              value: "0.0.0.0"
+            - name: PORT
+              value: "80"
