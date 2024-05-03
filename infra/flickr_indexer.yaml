@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: flickr-indexer
-          image: ghcr.io/dzfranklin/cg-flickr-indexer:v0.11
+          image: ghcr.io/dzfranklin/cg-flickr-indexer:v0.12
           env:
             - name: FLICKR_API_KEY
               valueFrom:
@@ -31,3 +31,5 @@ spec:
                 secretKeyRef:
                   name: cg-database
                   key: url
+            - name: REDIS_ADDR
+              value: "redis.default.svc.cluster.local:6379"

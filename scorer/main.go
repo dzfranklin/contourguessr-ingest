@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v4"
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 	"io"
 	"log"
 	"math/rand"
@@ -24,6 +25,7 @@ import (
 const activeVsn = 1
 
 var databaseURL string
+var redisAddr string
 var overpassEndpoint string
 var classifierEndpoint string
 
@@ -45,6 +47,11 @@ func main() {
 	databaseURL = os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
 		log.Fatal("DATABASE_URL not set")
+	}
+
+	redisAddr = os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		log.Fatal("REDIS_ADDR not set")
 	}
 
 	overpassEndpoint = os.Getenv("OVERPASS_ENDPOINT")
@@ -88,6 +95,10 @@ func scoreOneBatch() (int, error) {
 	}
 	defer db.Close(ctx)
 
+	rdb := redis.NewClient(&redis.Options{
+		Addr: redisAddr,
+	})
+
 	batch, err := loadUnscoredBatch(db)
 	if err != nil {
 		return 0, fmt.Errorf("error loading unscored batch: %w", err)
@@ -109,6 +120,13 @@ func scoreOneBatch() (int, error) {
 			validity, err = queryValidity(photoData)
 			if err != nil {
 				return 0, fmt.Errorf("error querying validity of %+v: %w", photo, err)
+			}
+		}
+
+		if !roadWithin1000m && validity != nil && validity.Score > 0.5 {
+			// TODO: backfill
+			if err := rdb.LPush(ctx, "cg-flickr-indexer:want-exif", photo.FlickrId).Err(); err != nil {
+				return 0, fmt.Errorf("error pushing to redis: %w", err)
 			}
 		}
 

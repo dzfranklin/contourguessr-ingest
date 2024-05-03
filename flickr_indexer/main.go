@@ -5,9 +5,11 @@ import (
 	"contourguessr-ingest/flickr"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v4"
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 	flag "github.com/spf13/pflag"
 	"log"
 	"math/rand"
@@ -20,18 +22,22 @@ import (
 
 var minInitialDelay = 15 * time.Second
 var maxInitialDelay = 1 * time.Minute
-var indexLoopSleepBase = time.Minute*5 + time.Second
+var loopSleepBase = time.Minute*5 + time.Second
 var minDate = time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)
 var minCheckInterval = time.Hour * 24 * 7
 var overlapPeriod = time.Hour * 24
 
+var exifBatchMax = 1000
+
 // Environment variables
 var databaseURL string
+var redisAddr string
 
 // Arguments
 var onlyRegion = flag.Int("only-region", -1, "Only process this region")
 
 var db *pgx.Conn
+var rdb *redis.Client
 
 // TODO: Add retry logic to flickr.Call
 
@@ -45,12 +51,17 @@ func main() {
 
 	if os.Getenv("DEBUG_SHORT_DELAYS") != "" {
 		maxInitialDelay = 5 * time.Second
-		indexLoopSleepBase = 15 * time.Second
+		loopSleepBase = 15 * time.Second
 	}
 
 	databaseURL = os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
 		log.Fatal("DATABASE_URL not set")
+	}
+
+	redisAddr = os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		log.Fatal("REDIS_ADDR not set")
 	}
 
 	flag.Parse()
@@ -62,6 +73,10 @@ func main() {
 	}
 	defer db.Close(ctx)
 
+	rdb = redis.NewClient(&redis.Options{
+		Addr: redisAddr,
+	})
+
 	initialDelay := time.Duration(rand.Intn(int(maxInitialDelay)))
 	if initialDelay < minInitialDelay {
 		initialDelay = minInitialDelay
@@ -70,14 +85,56 @@ func main() {
 	time.Sleep(initialDelay)
 
 	for {
+		log.Println("starting exif batch")
+		doExifBatch()
+		log.Println("completed exif batch")
+
 		log.Println("starting index run")
 		doIndex()
 		log.Println("completed index run")
 
-		indexLoopSleep := indexLoopSleepBase + time.Duration(rand.Intn(30))*time.Second
-		log.Printf("sleeping for %s", indexLoopSleep)
-		time.Sleep(indexLoopSleep)
+		loopSleep := loopSleepBase + time.Duration(rand.Intn(30))*time.Second
+		log.Printf("sleeping for %s", loopSleep)
+		time.Sleep(loopSleep)
 	}
+}
+
+func doExifBatch() {
+	ctx := context.Background()
+	for i := 0; i < exifBatchMax; i++ {
+		flickrID, err := rdb.RPop(ctx, "cg-flickr-indexer:want-exif").Result()
+		if errors.Is(err, redis.Nil) {
+			log.Println("want-exif queue empty")
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("Populating EXIF for %s", flickrID)
+
+		value, err := callFlickrGetExif(flickrID)
+		if err != nil {
+			log.Println("failed to get photo exif", err)
+			continue
+		}
+
+		err = saveExif(ctx, flickrID, value)
+		if err != nil {
+			log.Fatal("failed to save exif", err)
+		}
+	}
+}
+
+func saveExif(ctx context.Context, flickrID string, value exifData) error {
+	valuesJSON, err := json.Marshal(value.Values)
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec(ctx, `
+		UPDATE flickr_photos SET raw_exif = $2, exif = $3
+		WHERE flickr_id = $1
+	`, flickrID, value.Raw, valuesJSON)
+	return err
 }
 
 func doIndex() {
@@ -293,4 +350,87 @@ func callFlickrSearch(bbox string, stepStart, stepEnd time.Time, page int) (flic
 		"page":            fmt.Sprintf("%d", page),
 	})
 	return resp, err
+}
+
+/*
+var resp struct {
+		Photo struct {
+			Exif json.RawMessage `json:"exif"`
+		} `json:"photo"`
+	}
+	err := flickr.Call("flickr.photos.getExif", &resp, map[string]string{
+		"photo_id": id,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if resp.Photo.Exif == nil {
+		return nil, nil
+	}
+
+	var entries []struct {
+		Raw struct {
+			Content string `json:"_content"`
+		} `json:"raw"`
+		Tag        string `json:"tag"`
+		Label      string `json:"label"`
+		TagSpace   string `json:"tagspace"`
+		TagSpaceID int    `json:"tagspaceid"`
+	}
+	if err := json.Unmarshal(resp.Photo.Exif, &entries); err != nil {
+		log.Printf("Failed to parse exif: %s", err)
+		return nil, nil
+	}
+
+	data := make(map[string]string)
+	for _, value := range entries {
+		data[value.Tag] = value.Raw.Content
+	}
+
+	return data, resp.Photo.Exif
+*/
+
+type exifData struct {
+	Values map[string]string
+	Raw    json.RawMessage
+}
+
+func callFlickrGetExif(photoID string) (out exifData, err error) {
+	time.Sleep(1 * time.Second)
+
+	var resp struct {
+		Photo struct {
+			Exif json.RawMessage `json:"exif"`
+		} `json:"photo"`
+	}
+	err = flickr.Call("flickr.photos.getExif", &resp, map[string]string{
+		"photo_id": photoID,
+	})
+	if err != nil {
+		return
+	}
+	out.Raw = resp.Photo.Exif
+
+	var parsed []struct {
+		Raw struct {
+			Content string `json:"_content"`
+		} `json:"raw"`
+		Tag        string `json:"tag"`
+		Label      string `json:"label"`
+		TagSpace   string `json:"tagspace"`
+		TagSpaceID int    `json:"tagspaceid"`
+	}
+	if resp.Photo.Exif != nil {
+		if err = json.Unmarshal(resp.Photo.Exif, &parsed); err != nil {
+			return
+		}
+	}
+
+	out.Values = make(map[string]string)
+	for _, value := range parsed {
+		out.Values[value.Tag] = value.Raw.Content
+	}
+
+	return
 }
