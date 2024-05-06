@@ -108,3 +108,56 @@ FROM flickr_photos as p
          RIGHT JOIN regions as r ON p.region_id = r.id
 GROUP BY r.id
 ORDER BY r.id;
+
+---
+
+SELECT r.name,
+       round(100 * (count(*) filter (where exif -> 'GPSLatitude' is not null and exif -> 'GPSLongitude' is not null))
+                 / count(*) filter (where exif is not null), 2) as pc_gps
+FROM flickr_photos
+         JOIN regions r on flickr_photos.region_id = r.id
+GROUP BY r.id, r.name
+ORDER BY r.name;
+
+SELECT exif
+FROM flickr_photos
+WHERE exif -> 'GPSLatitude' is not null
+  and exif -> 'GPSLongitude' is not null
+ORDER BY random()
+LIMIT 100;
+
+-- Select keys of the object exif present on at least 5% of photos
+
+SELECT key, round(100.0 * count(*) / (SELECT count(*) FROM flickr_photos WHERE exif is not null), 2) as pc
+FROM flickr_photos,
+     jsonb_object_keys(exif) as key
+GROUP BY key
+ORDER BY count(*) DESC;
+
+-- TODO: If GPSStatus = 'Measurement Void' (~2%) don't use the picture
+
+SELECT exif->>'GPSStatus', count(*)
+FROM flickr_photos
+WHERE exif is not null
+GROUP BY exif->>'GPSStatus'
+ORDER BY count(*) DESC;
+
+-- TODO: ~10% of photos have a GPSHPositioningError. Use above threshold to reject? Use as a positive signal?
+
+SELECT round(100.0 * count(*) filter (where exif->>'GPSHPositioningError' is not null) / count(*), 2)
+FROM flickr_photos
+WHERE exif is not null
+ORDER BY count(*) DESC;
+
+SELECT round(100.0 * count(*) filter (where exif->>'GPSDOP' is not null) / count(*), 2)
+FROM flickr_photos
+WHERE exif is not null; -- ~7%
+
+SELECT round(100.0 * count(*) filter (where exif->>'GPSSatellites' is not null) / count(*), 2)
+FROM flickr_photos
+WHERE exif is not null
+ORDER BY count(*) DESC; -- ~5%
+
+SELECT round(100.0 * count(*) filter (where exif->>'GPSDifferential' is not null) / count(*), 2)
+FROM flickr_photos
+WHERE exif is not null; -- ~5%
