@@ -60,6 +60,8 @@ spec:
                 secretKeyRef:
                   name: cg-database
                   key: url
+            - name: REDIS_ADDR
+              value: "redis.default.svc.cluster.local:6379"
             - name: ADMIN_MAPTILER_API_KEY
               valueFrom:
                 secretKeyRef:

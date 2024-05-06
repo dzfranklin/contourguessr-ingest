@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/redis/go-redis/v9"
 	"html/template"
 	"log"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 )
 
 var Db *pgxpool.Pool
+var Rdb *redis.Client
 var MaptilerAPIKey string
 
 //go:embed *.tmpl.*

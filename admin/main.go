@@ -5,6 +5,7 @@ import (
 	"contourguessr-ingest/admin/routes"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 	"log"
 	"net/http"
 	"os"
@@ -44,16 +45,21 @@ func main() {
 
 	// Setup globals
 
+	routes.MaptilerAPIKey = maptilerApiKey
+
 	db, err = pgxpool.Connect(context.Background(), databaseURL)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
+	routes.Db = db
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr: os.Getenv("REDIS_ADDR"),
+	})
+	routes.Rdb = rdb
 
 	// Serve
-
-	routes.Db = db
-	routes.MaptilerAPIKey = maptilerApiKey
 
 	mux := routes.Mux()
 

@@ -12,8 +12,15 @@ func overviewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	wantExifQueueLen, err := Rdb.LLen(r.Context(), "cg-flickr-indexer:want-exif").Result()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	templateResponse(w, r, "overview.tmpl.html", M{
-		"Counts": counts,
+		"Counts":           counts,
+		"WantExifQueueLen": wantExifQueueLen,
 	})
 }
 
