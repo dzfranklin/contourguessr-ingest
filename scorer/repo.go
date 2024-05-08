@@ -16,8 +16,13 @@ type Entry struct {
 	Exif       *map[string]string
 
 	RoadWithin1000m *bool
-	ValidityScore   *float64
-	ValidityModel   *string
+
+	ValidityScore *float64
+	ValidityModel *string
+
+	GPSAltitude          *float64
+	GPSAltitudeAvailable *bool
+	TerrainAltitude      *float64
 }
 
 func loadBatch(db *pgx.Conn) ([]Entry, error) {
@@ -26,7 +31,9 @@ func loadBatch(db *pgx.Conn) ([]Entry, error) {
 		SELECT s.id, p.flickr_id,
 			   p.summary ->> 'server', p.summary ->> 'secret',
 			   ST_X(p.geo::geometry), ST_Y(p.geo::geometry), p.exif,
-			   s.road_within_1000m, s.validity_score, s.validity_model
+			   s.road_within_1000m,
+			   s.validity_score, s.validity_model,
+			   s.gps_altitude, s.gps_altitude_available, s.terrain_altitude
 		FROM photo_scores as s
 				 RIGHT JOIN flickr_photos as p ON s.flickr_photo_id = p.flickr_id
 		WHERE (s.vsn is null OR s.vsn = $1)
@@ -50,7 +57,9 @@ func loadBatch(db *pgx.Conn) ([]Entry, error) {
 			&entry.Id, &entry.FlickrId,
 			&server, &secret,
 			&entry.Lng, &entry.Lat, &entry.Exif,
-			&entry.RoadWithin1000m, &entry.ValidityScore, &entry.ValidityModel,
+			&entry.RoadWithin1000m,
+			&entry.ValidityScore, &entry.ValidityModel,
+			&entry.GPSAltitude, &entry.GPSAltitudeAvailable, &entry.TerrainAltitude,
 		)
 		if err != nil {
 			return nil, err
@@ -66,10 +75,15 @@ func (entry *Entry) Save(db *pgx.Conn) error {
 	if entry.Id == nil {
 		row := db.QueryRow(ctx, `
 			INSERT INTO photo_scores (vsn, updated_at, flickr_photo_id,
-			                          road_within_1000m, validity_score, validity_model)
-			VALUES ($1, CURRENT_TIMESTAMP, $2, $3, $4, $5)
+			                          road_within_1000m,
+			                          validity_score, validity_model,
+			                          gps_altitude, gps_altitude_available, terrain_altitude)
+			VALUES ($1, CURRENT_TIMESTAMP, $2, $3, $4, $5, $6, $7, $8)
 			RETURNING id
-		`, activeVsn, entry.FlickrId, entry.RoadWithin1000m, entry.ValidityScore, entry.ValidityModel)
+		`, activeVsn, entry.FlickrId,
+			entry.RoadWithin1000m,
+			entry.ValidityScore, entry.ValidityModel,
+			entry.GPSAltitude, entry.GPSAltitudeAvailable, entry.TerrainAltitude)
 		err := row.Scan(&entry.Id)
 		if err != nil {
 			return err
@@ -79,11 +93,14 @@ func (entry *Entry) Save(db *pgx.Conn) error {
 		_, err := db.Exec(ctx, `
 			UPDATE photo_scores
 			SET updated_at = CURRENT_TIMESTAMP,
-			    road_within_1000m = $1,
-			    validity_score = $2,
-			    validity_model = $3
-			WHERE id = $4
-		`, entry.RoadWithin1000m, entry.ValidityScore, entry.ValidityModel, entry.Id)
+			    road_within_1000m = $2,
+			    validity_score = $3, validity_model = $4,
+				gps_altitude = $5, gps_altitude_available = $6, terrain_altitude = $7
+			WHERE id = $1
+		`, entry.Id,
+			entry.RoadWithin1000m,
+			entry.ValidityScore, entry.ValidityModel,
+			entry.GPSAltitude, entry.GPSAltitudeAvailable, entry.TerrainAltitude)
 		if err != nil {
 			return err
 		}

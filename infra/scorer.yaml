@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: scorer
-          image: ghcr.io/dzfranklin/cg-scorer:v0.8
+          image: ghcr.io/dzfranklin/cg-scorer:v0.9
           env:
             - name: DATABASE_URL
               valueFrom:
@@ -30,3 +30,8 @@ spec:
               value: "http://api.overpass.svc.cluster.local/api"
             - name: CLASSIFIER_ENDPOINT
               value: "http://classifier"
+            - name: BING_MAPS_KEY
+              valueFrom:
+                  secretKeyRef:
+                    name: bing-maps-api
+                    key: key

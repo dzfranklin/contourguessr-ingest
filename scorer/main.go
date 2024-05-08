@@ -20,6 +20,7 @@ var databaseURL string
 var redisAddr string
 var overpassEndpoint string
 var classifierEndpoint string
+var bingMapsKey string
 
 var minFlickrImgRequestDelay = 250 * time.Millisecond
 var maxFlickrImgRequestDelay = 5 * time.Second
@@ -54,6 +55,11 @@ func main() {
 	classifierEndpoint = os.Getenv("CLASSIFIER_ENDPOINT")
 	if classifierEndpoint == "" {
 		log.Fatal("CLASSIFIER_ENDPOINT not set")
+	}
+
+	bingMapsKey = os.Getenv("BING_MAPS_KEY")
+	if bingMapsKey == "" {
+		log.Fatal("BING_MAPS_KEY not set")
 	}
 
 	// End setup
@@ -131,14 +137,27 @@ func scoreEntry(db *pgx.Conn, rdb *redis.Client, entry Entry) error {
 		entry.ValidityModel = &validity.Model
 	}
 
-	if !*entry.RoadWithin1000m && entry.ValidityScore != nil && *entry.ValidityScore > 0.5 {
-		if entry.Exif == nil {
-			if err := rdb.LPush(ctx, "cg-flickr-indexer:want-exif", entry.FlickrId).Err(); err != nil {
-				return err
-			}
-		} else {
-			// TODO: use
+	if !*entry.RoadWithin1000m &&
+		entry.ValidityScore != nil && *entry.ValidityScore > 0.5 &&
+		entry.Exif == nil {
+		if err := rdb.LPush(ctx, "cg-flickr-indexer:want-exif", entry.FlickrId).Err(); err != nil {
+			return err
 		}
+	}
+
+	if entry.Exif != nil && entry.GPSAltitude == nil {
+		altitude, ok := exifGPSAltitude(*entry.Exif)
+		entry.GPSAltitudeAvailable = &ok
+		if ok {
+			entry.GPSAltitude = &altitude
+		}
+	}
+	if entry.GPSAltitude != nil && entry.TerrainAltitude == nil {
+		terrainAltitude, err := getElevation(entry.Lng, entry.Lat)
+		if err != nil {
+			return fmt.Errorf("error getting elevation for %+v: %w", entry, err)
+		}
+		entry.TerrainAltitude = &terrainAltitude
 	}
 
 	if err := entry.Save(db); err != nil {
