@@ -45,7 +45,11 @@ func queryRoadWithin1000m(lng, lat float64) (bool, error) {
 	}
 	err = json.NewDecoder(resp.Body).Decode(&ovpResp)
 	if err != nil {
-		return false, err
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			body = []byte(fmt.Sprintf("<error reading body: %s>", err))
+		}
+		return false, fmt.Errorf("%w: got %s", err, body)
 	}
 
 	for _, elem := range ovpResp.Elements {
