@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -29,6 +30,13 @@ func queryRoadWithin1000m(lng, lat float64) (bool, error) {
 		return false, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			body = []byte(fmt.Sprintf("<error reading body: %s>", err))
+		}
+		return false, fmt.Errorf("status code %d: %s", resp.StatusCode, body)
+	}
 
 	var ovpResp struct {
 		Elements []struct {

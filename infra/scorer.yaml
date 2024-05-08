@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: scorer
-          image: ghcr.io/dzfranklin/cg-scorer:v0.10
+          image: ghcr.io/dzfranklin/cg-scorer:v0.11
           env:
             - name: DATABASE_URL
               valueFrom:
