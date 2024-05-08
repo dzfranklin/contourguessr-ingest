@@ -22,8 +22,8 @@ var overpassEndpoint string
 var classifierEndpoint string
 var bingMapsKey string
 
-var minFlickrImgRequestDelay = 250 * time.Millisecond
-var maxFlickrImgRequestDelay = 5 * time.Second
+var minFlickrImgRequestDelay = 1 * time.Second
+var maxFlickrImgRequestDelay = 2 * time.Second
 var minIdleWait = 4 * time.Minute
 var maxIdleWait = 5 * time.Minute
 var minErrWait = 2 * time.Minute
