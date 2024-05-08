@@ -14,6 +14,7 @@ type plotPoint struct {
 	PreviewURL     string    `json:"preview_url"`
 	WebURL         string    `json:"web_url"`
 	Geo            []float64 `json:"geo"`
+	IsAccepted     bool      `json:"is_accepted"`
 	ScoreUpdatedAt time.Time `json:"score_updated_at"`
 	ValidityScore  float64   `json:"validity_score"`
 	ValidityModel  string    `json:"validity_model"`
@@ -100,7 +101,7 @@ func loadPoints(ctx context.Context, region int) ([]plotPoint, error) {
 	rows, err := Db.Query(ctx, `
 		SELECT p.flickr_id, p.summary->>'owner', p.summary->>'server', p.summary->>'secret',
 		       ST_X(p.geo::geometry), ST_Y(p.geo::geometry),
-		       s.updated_at, s.validity_score, s.validity_model
+		       s.is_accepted, s.updated_at, s.validity_score, s.validity_model
 		FROM flickr_photos as p
 				 JOIN (SELECT DISTINCT ON (flickr_photo_id) *
 					   FROM photo_scores
@@ -112,21 +113,21 @@ func loadPoints(ctx context.Context, region int) ([]plotPoint, error) {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var point plotPoint
+		var p plotPoint
 		var owner string
 		var server string
 		var secret string
 		var lng, lat float64
-		err = rows.Scan(&point.FlickrID, &owner, &server, &secret,
-			&lng, &lat, &point.ScoreUpdatedAt,
-			&point.ValidityScore, &point.ValidityModel)
+		err = rows.Scan(&p.FlickrID, &owner, &server, &secret,
+			&lng, &lat,
+			&p.IsAccepted, &p.ScoreUpdatedAt, &p.ValidityScore, &p.ValidityModel)
 		if err != nil {
 			return nil, err
 		}
-		point.PreviewURL = "https://live.staticflickr.com/" + server + "/" + point.FlickrID + "_" + secret + "_n.jpg"
-		point.WebURL = "https://www.flickr.com/photos/" + owner + "/" + point.FlickrID
-		point.Geo = []float64{lng, lat}
-		points = append(points, point)
+		p.PreviewURL = "https://live.staticflickr.com/" + server + "/" + p.FlickrID + "_" + secret + "_n.jpg"
+		p.WebURL = "https://www.flickr.com/photos/" + owner + "/" + p.FlickrID
+		p.Geo = []float64{lng, lat}
+		points = append(points, p)
 	}
 	return points, nil
 }
