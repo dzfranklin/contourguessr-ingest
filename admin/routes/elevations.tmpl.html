@@ -1,0 +1,62 @@
+{{ define "title" }}Elevations{{ end }}
+
+{{ define "styles" }}
+<style>
+  .histogram-examples {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      grid-gap: 1em;
+  }
+
+  .histogram-examples li {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+  }
+
+  .histogram-examples img {
+      width: 100%;
+      height: auto;
+      max-height: 200px;
+  }
+</style>
+{{ end }}
+
+{{ define "content" }}
+  <ul>
+      {{ range .Histogram }}
+        <li>
+          <summary>
+            <span>{{ .Min }} to {{ .Max }}</span>
+            <span>{{ .Count }} ({{ percent .Count $.Total }})</span>
+            <details>
+              <ul class="histogram-examples">
+                  {{ range .Examples }}
+                    <li>
+                      <a href="{{ .WebURL }}">
+                        <img src="{{ .PreviewURL }}" alt="">
+                      </a>
+
+                      <table class="kv">
+                        <tbody>
+                        <tr>
+                          <td>GPS Altitude</td>
+                          <td>{{ .GPSAltitude }}</td>
+                        </tr>
+                        <tr>
+                          <td>Terrain Altitude</td>
+                          <td>{{ .TerrainAltitude }}</td>
+                        </tr>
+                        </tbody>
+                      </table>
+                    </li>
+                  {{ end }}
+              </ul>
+            </details>
+          </summary>
+        </li>
+      {{ end }}
+  </ul>
+{{ end }}
+
+{{ template "layout.tmpl.html" . }}

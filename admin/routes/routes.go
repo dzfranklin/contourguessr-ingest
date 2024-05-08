@@ -69,6 +69,7 @@ func Mux() http.Handler {
 		{Path: "/", Title: "Home"},
 		{Path: "/overview", Title: "Overview"},
 		{Path: "/plot", Title: "Plot"},
+		{Path: "/elevations", Title: "Elevations"},
 	}
 
 	mux := http.NewServeMux()
@@ -76,6 +77,7 @@ func Mux() http.Handler {
 	mux.HandleFunc("/", indexHandler)
 	mux.HandleFunc("/overview", overviewHandler)
 	mux.HandleFunc("/plot", plotHandler)
+	mux.HandleFunc("/elevations", elevationsHandler)
 
 	return timingMiddleware(mux)
 }
