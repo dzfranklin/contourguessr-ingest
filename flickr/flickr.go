@@ -86,7 +86,7 @@ func Call(method string, resp any, params map[string]string) error {
 
 	mu.Lock()
 	defer mu.Unlock()
-	wait := time.Until(lastCall.Add(time.Second))
+	wait := time.Until(lastCall.Add(time.Second + 100*time.Millisecond))
 	if wait > 0 {
 		time.Sleep(wait)
 	}

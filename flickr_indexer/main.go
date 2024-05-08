@@ -50,6 +50,8 @@ func main() {
 	}
 
 	if os.Getenv("DEBUG_SHORT_DELAYS") != "" {
+		log.Println("DEBUG_SHORT_DELAYS is set")
+		minInitialDelay = 1 * time.Second
 		maxInitialDelay = 5 * time.Second
 		loopSleepBase = 15 * time.Second
 	}
@@ -85,6 +87,10 @@ func main() {
 	time.Sleep(initialDelay)
 
 	for {
+		log.Println("starting sizes batch")
+		doSizesBatch()
+		log.Println("completed sizes batch")
+
 		log.Println("starting exif batch")
 		doExifBatch()
 		log.Println("completed exif batch")
@@ -96,6 +102,47 @@ func main() {
 		loopSleep := loopSleepBase + time.Duration(rand.Intn(30))*time.Second
 		log.Printf("sleeping for %s", loopSleep)
 		time.Sleep(loopSleep)
+	}
+}
+
+func doSizesBatch() {
+	ctx := context.Background()
+	rows, err := db.Query(ctx, `
+		SELECT flickr_id
+		FROM flickr_photos as p
+		LEFT JOIN photo_scores as s ON p.flickr_id = s.flickr_photo_id
+		WHERE s.is_accepted AND p.sizes IS NULL
+		ORDER BY random()
+		LIMIT 1000
+	`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var ids []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			log.Fatal(err)
+		}
+		ids = append(ids, id)
+	}
+
+	for _, id := range ids {
+		log.Printf("Getting sizes for %s", id)
+		sizes, err := callFlickrGetSizes(id)
+		if err != nil {
+			log.Println("failed to get photo sizes", err)
+			continue
+		}
+
+		_, err = db.Exec(ctx, `
+			UPDATE flickr_photos SET sizes = $2
+			WHERE flickr_id = $1
+		`, id, sizes)
+		if err != nil {
+			log.Fatal("failed to save sizes", err)
+		}
 	}
 }
 
@@ -337,7 +384,6 @@ type flickrSearchPage struct {
 }
 
 func callFlickrSearch(bbox string, stepStart, stepEnd time.Time, page int) (flickrSearchPage, error) {
-	time.Sleep(1 * time.Second)
 	var resp flickrSearchPage
 	err := flickr.Call("flickr.photos.search", &resp, map[string]string{
 		"bbox":            bbox,
@@ -352,53 +398,12 @@ func callFlickrSearch(bbox string, stepStart, stepEnd time.Time, page int) (flic
 	return resp, err
 }
 
-/*
-var resp struct {
-		Photo struct {
-			Exif json.RawMessage `json:"exif"`
-		} `json:"photo"`
-	}
-	err := flickr.Call("flickr.photos.getExif", &resp, map[string]string{
-		"photo_id": id,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if resp.Photo.Exif == nil {
-		return nil, nil
-	}
-
-	var entries []struct {
-		Raw struct {
-			Content string `json:"_content"`
-		} `json:"raw"`
-		Tag        string `json:"tag"`
-		Label      string `json:"label"`
-		TagSpace   string `json:"tagspace"`
-		TagSpaceID int    `json:"tagspaceid"`
-	}
-	if err := json.Unmarshal(resp.Photo.Exif, &entries); err != nil {
-		log.Printf("Failed to parse exif: %s", err)
-		return nil, nil
-	}
-
-	data := make(map[string]string)
-	for _, value := range entries {
-		data[value.Tag] = value.Raw.Content
-	}
-
-	return data, resp.Photo.Exif
-*/
-
 type exifData struct {
 	Values map[string]string
 	Raw    json.RawMessage
 }
 
 func callFlickrGetExif(photoID string) (out exifData, err error) {
-	time.Sleep(1 * time.Second)
-
 	var resp struct {
 		Photo struct {
 			Exif json.RawMessage `json:"exif"`
@@ -433,4 +438,18 @@ func callFlickrGetExif(photoID string) (out exifData, err error) {
 	}
 
 	return
+}
+
+func callFlickrGetSizes(photoID string) (json.RawMessage, error) {
+	var resp struct {
+		Sizes json.RawMessage `json:"sizes"`
+	}
+	err := flickr.Call("flickr.photos.getSizes", &resp, map[string]string{
+		"photo_id": photoID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Sizes, nil
 }
