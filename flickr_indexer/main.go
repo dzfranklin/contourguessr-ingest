@@ -91,6 +91,10 @@ func main() {
 		doSizesBatch()
 		log.Println("completed sizes batch")
 
+		log.Println("starting info batch")
+		doInfoBatch()
+		log.Println("completed info batch")
+
 		log.Println("starting exif batch")
 		doExifBatch()
 		log.Println("completed exif batch")
@@ -142,6 +146,47 @@ func doSizesBatch() {
 		`, id, sizes)
 		if err != nil {
 			log.Fatal("failed to save sizes", err)
+		}
+	}
+}
+
+func doInfoBatch() {
+	ctx := context.Background()
+	rows, err := db.Query(ctx, `
+		SELECT flickr_id
+		FROM flickr_photos as p
+		LEFT JOIN photo_scores as s ON p.flickr_id = s.flickr_photo_id
+		WHERE s.is_accepted AND p.info IS NULL
+		ORDER BY random()
+		LIMIT 1000
+	`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var ids []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			log.Fatal(err)
+		}
+		ids = append(ids, id)
+	}
+
+	for _, id := range ids {
+		log.Printf("Getting info for %s", id)
+		info, err := callFlickrGetInfo(id)
+		if err != nil {
+			log.Println("failed to get photo info", err)
+			continue
+		}
+
+		_, err = db.Exec(ctx, `
+			UPDATE flickr_photos SET info = $2
+			WHERE flickr_id = $1
+		`, id, info)
+		if err != nil {
+			log.Fatal("failed to save info", err)
 		}
 	}
 }
@@ -452,4 +497,18 @@ func callFlickrGetSizes(photoID string) (json.RawMessage, error) {
 	}
 
 	return resp.Sizes, nil
+}
+
+func callFlickrGetInfo(photoID string) (json.RawMessage, error) {
+	var resp struct {
+		Photo json.RawMessage `json:"photo"`
+	}
+	err := flickr.Call("flickr.photos.getInfo", &resp, map[string]string{
+		"photo_id": photoID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Photo, nil
 }
