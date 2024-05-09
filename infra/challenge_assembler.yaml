@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: challenge-assembler
+  namespace: contourguessr
+  labels:
+    app: challenge-assembler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: challenge-assembler
+  template:
+    metadata:
+      labels:
+        app: challenge-assembler
+    spec:
+      containers:
+        - name: challenge-assembler
+          image: ghcr.io/dzfranklin/cg-challenge-assembler:v0.2
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: cg-database
+                  key: url
