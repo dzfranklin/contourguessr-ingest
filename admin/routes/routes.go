@@ -68,6 +68,7 @@ func Mux() http.Handler {
 	navEntries = []navEntry{
 		{Path: "/", Title: "Home"},
 		{Path: "/overview", Title: "Overview"},
+		{Path: "/browse", Title: "Browse"},
 		{Path: "/plot", Title: "Plot"},
 		{Path: "/elevations", Title: "Elevations"},
 	}
@@ -78,6 +79,7 @@ func Mux() http.Handler {
 	mux.HandleFunc("/overview", overviewHandler)
 	mux.HandleFunc("/plot", plotHandler)
 	mux.HandleFunc("/elevations", elevationsHandler)
+	mux.HandleFunc("/browse", browseHandler)
 
 	return timingMiddleware(mux)
 }

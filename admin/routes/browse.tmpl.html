@@ -1,0 +1,88 @@
+{{ define "title" }}Browse {{ .RegionName }}{{ end }}
+
+{{ define "styles" }}
+  <style>
+      .page-control {
+          display: flex;
+          gap: 0.5em;
+          margin: 1em 0;
+      }
+
+      .entries {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          grid-gap: 1em;
+          margin: 0;
+          padding: 0;
+      }
+
+      .entries li {
+          list-style: none;
+          margin: 0;
+          padding: 0;
+      }
+
+      .entries img {
+          width: 100%;
+          height: auto;
+          max-height: 200px;
+      }
+  </style>
+{{ end }}
+
+{{ define "pageControl" }}
+  <div class="page-control">
+      {{ if .FirstURL }}
+        <a href="{{ .FirstURL }}">First</a>
+      {{ end }}
+      {{ if .PrevURL }}
+        <a href="{{ .PrevURL }}">Prev</a>
+      {{ end }}
+    <span>{{ .Page }} of {{ .PageCount }}</span>
+      {{ if .NextURL }}
+        <a href="{{ .NextURL }}">Next</a>
+      {{ end }}
+      {{ if .LastURL }}
+        <a href="{{ .LastURL }}">Last</a>
+      {{ end }}
+  </div>
+{{ end }}
+
+{{ define "content" }}
+  <h1>{{ or .RegionName "Pick a region" }}</h1>
+
+  <form autocomplete="off">
+    <select name="r">
+      <option value="" {{ if eq .Region "" }}selected{{ end }}>Pick a region</option>
+        {{ range .Regions }}
+          <option value="{{ .ID }}" {{ if eq (printf "%d" .ID) $.Region }}selected{{ end }}>
+              {{ .Name }}</option>
+        {{ end }}
+    </select>
+
+    <button type="submit">Go</button>
+  </form>
+
+  {{ if .Entries }}
+      {{ template "pageControl" . }}
+
+      <ul class="entries">
+          {{ range .Entries }}
+            <li>
+              <img src="{{ .PreviewURL }}" alt="">
+              <div>
+                <span>{{ .ChallengeId }}</span>
+                <a href="{{ .ChallengeURL }}">Challenge</a>
+                <a href="{{ .DebugChallengeURL }}">Debug</a>
+                <a href="{{ .OriginalURL }}">Original</a>
+              </div>
+            </li>
+          {{ end }}
+      </ul>
+
+      {{ template "pageControl" . }}
+  {{ end }}
+
+{{ end }}
+
+{{ template "layout.tmpl.html" . }}

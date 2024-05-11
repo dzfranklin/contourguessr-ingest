@@ -50,7 +50,7 @@ spec:
     spec:
       containers:
         - name: admin
-          image: ghcr.io/dzfranklin/cg-admin:v0.3
+          image: ghcr.io/dzfranklin/cg-admin:v0.5
           ports:
             - containerPort: 80
               name: http
