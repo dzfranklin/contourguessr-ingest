@@ -20,12 +20,24 @@
           list-style: none;
           margin: 0;
           padding: 0;
+          font-size: 0.9rem;
       }
 
       .entries img {
           width: 100%;
           height: auto;
           max-height: 200px;
+      }
+
+      .badge {
+          display: inline-block;
+          text-align: center;
+          line-height: 0.8em;
+          font-size: 0.8em;
+          color: white;
+          background-color: #777777;
+          padding: 3px;
+          border-radius: 3px;
       }
   </style>
 {{ end }}
@@ -71,6 +83,7 @@
             <li>
               <img src="{{ .PreviewURL }}" alt="">
               <div>
+                {{ if .HasGPS }}<span class="badge">GPS</span>{{ end }}
                 <span>{{ .ChallengeId }}</span>
                 <a href="{{ .ChallengeURL }}">Challenge</a>
                 <a href="{{ .DebugChallengeURL }}">Debug</a>

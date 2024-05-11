@@ -105,13 +105,14 @@ type browseEntry struct {
 	ChallengeURL      string
 	DebugChallengeURL string
 	OriginalURL       string
+	HasGPS            bool
 }
 
 const perPage = 50
 
 func loadBrowsePage(ctx context.Context, regionId int, pageNum int) (bool, []browseEntry, error) {
 	rows, err := Db.Query(ctx, `
-		SELECT c.id, p.flickr_id, p.summary->>'server', p.summary->>'secret', p.summary->>'owner'
+		SELECT c.id, p.flickr_id, p.summary->>'server', p.summary->>'secret', p.summary->>'owner', p.exif->'GPSLatitude' is not null
 		FROM challenges as c
 		JOIN flickr_challenge_sources as fcs ON c.id = fcs.challenge_id
 		JOIN flickr_photos as p ON fcs.flickr_id = p.flickr_id
@@ -131,7 +132,7 @@ func loadBrowsePage(ctx context.Context, regionId int, pageNum int) (bool, []bro
 		var owner string
 		var server string
 		var secret string
-		err := rows.Scan(&internalChallengeId, &entry.FlickrId, &server, &secret, &owner)
+		err := rows.Scan(&internalChallengeId, &entry.FlickrId, &server, &secret, &owner, &entry.HasGPS)
 		if err != nil {
 			return false, nil, err
 		}
