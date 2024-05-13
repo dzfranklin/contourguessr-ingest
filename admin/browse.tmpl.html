@@ -23,9 +23,23 @@
           font-size: 0.9rem;
       }
 
+      .entries .footer {
+          display: flex;
+          align-items: baseline;
+          gap: 0.2rem;
+      }
+
+      .entries .region-link {
+          display: inline-block;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          max-width: 5em;
+      }
+
       .entries img {
-          width: 100%;
-          height: auto;
+          object-fit: cover;
+          max-width: 100%;
           max-height: 200px;
       }
 
@@ -81,12 +95,12 @@
       <ul class="entries">
           {{ range .Entries }}
             <li>
-              <img src="{{ .PreviewURL }}" alt="">
-              <div>
-                {{ if .HasGPS }}<span class="badge">GPS</span>{{ end }}
-                <span>{{ .ChallengeId }}</span>
-                <a href="{{ .ChallengeURL }}">Challenge</a>
-                <a href="{{ .DebugChallengeURL }}">Debug</a>
+              <img src="{{ .MediumSource }}" alt="">
+              <div class="footer">
+                  {{ if .HasGPS }}<span class="badge">GPS</span>{{ end }}
+                  {{ if eq $.Region "" }}
+                    <a href="?r={{ .RegionID }}" class="region-link">{{ .RegionName }}</a>
+                  {{ end }}
                 <a href="{{ .OriginalURL }}">Original</a>
               </div>
             </li>

@@ -1,12 +1,10 @@
-package routes
+package admin
 
 import (
 	"context"
 	"embed"
 	"encoding/json"
 	"fmt"
-	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/redis/go-redis/v9"
 	"html/template"
 	"log"
 	"net/http"
@@ -14,10 +12,6 @@ import (
 	"strings"
 	"time"
 )
-
-var Db *pgxpool.Pool
-var Rdb *redis.Client
-var MaptilerAPIKey string
 
 //go:embed *.tmpl.*
 var templateFS embed.FS
@@ -70,7 +64,6 @@ func Mux() http.Handler {
 		{Path: "/overview", Title: "Overview"},
 		{Path: "/browse", Title: "Browse"},
 		{Path: "/plot", Title: "Plot"},
-		{Path: "/elevations", Title: "Elevations"},
 	}
 
 	mux := http.NewServeMux()
@@ -78,7 +71,6 @@ func Mux() http.Handler {
 	mux.HandleFunc("/", indexHandler)
 	mux.HandleFunc("/overview", overviewHandler)
 	mux.HandleFunc("/plot", plotHandler)
-	mux.HandleFunc("/elevations", elevationsHandler)
 	mux.HandleFunc("/browse", browseHandler)
 
 	return timingMiddleware(mux)
@@ -94,7 +86,7 @@ func templateResponse(w http.ResponseWriter, r *http.Request, name string, data 
 
 	if appEnv == "development" {
 		log.Println("Loading templates directly (dev mode)")
-		tmpl, err = prepareEmptyTemplate(name).ParseFiles("admin/routes/layout.tmpl.html", "admin/routes/"+name)
+		tmpl, err = prepareEmptyTemplate(name).ParseFiles("admin/layout.tmpl.html", "admin/"+name)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -149,7 +141,7 @@ type regionListEntry struct {
 }
 
 func listRegions(ctx context.Context) ([]regionListEntry, error) {
-	rows, err := Db.Query(ctx, `SELECT id, name FROM regions ORDER BY name`)
+	rows, err := db.Query(ctx, `SELECT id, name FROM regions ORDER BY name`)
 	if err != nil {
 		return nil, err
 	}

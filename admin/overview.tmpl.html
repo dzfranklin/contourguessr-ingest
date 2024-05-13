@@ -1,0 +1,30 @@
+{{ define "title" }}Overview{{ end }}
+
+{{ define "content" }}
+  <table>
+    <thead>
+    <tr>
+      <th>Region</th>
+      <th>Count</th>
+      <th>Latest</th>
+      <th>Last check</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{ range .IngestCounts }}
+      <tr>
+        <td>{{ .RegionName }} ({{ .RegionID }})</td>
+        <td>{{ .Count }}</td>
+        <td>{{ .Latest.Format "2006-01-02" }}</td>
+        <td>
+            {{ if .LastCheck}}
+                {{ .LastCheck.Format "2006-01-02 15:04:05" }}
+            {{ end }}
+        </td>
+      </tr>
+    {{ end }}
+    </tbody>
+  </table>
+{{ end }}
+
+{{ template "layout.tmpl.html" . }}

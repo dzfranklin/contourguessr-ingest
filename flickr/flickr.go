@@ -1,10 +1,10 @@
 package flickr
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/joho/godotenv"
-	"hash/fnv"
+	"github.com/cenkalti/backoff/v4"
 	"io"
 	"log"
 	"net/http"
@@ -13,30 +13,6 @@ import (
 	"sync"
 	"time"
 )
-
-var flickrApiKey string
-var flickrEndpoint *url.URL
-
-func init() {
-	err := godotenv.Load(".env", ".env.local")
-	if err != nil {
-		log.Println(err)
-	}
-
-	flickrApiKey = os.Getenv("FLICKR_API_KEY")
-	if flickrApiKey == "" {
-		log.Fatal("FLICKR_API_KEY not set")
-	}
-
-	flickrEndpointS := os.Getenv("FLICKR_ENDPOINT")
-	if flickrEndpointS == "" {
-		log.Fatal("FLICKR_ENDPOINT not set")
-	}
-	flickrEndpoint, err = url.Parse(flickrEndpointS)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
 
 type SearchResponse struct {
 	Page    int `json:"page"`
@@ -66,10 +42,71 @@ type Photo struct {
 	Accuracy   string `json:"accuracy"`
 }
 
-var mu sync.Mutex
-var lastCall time.Time
+type Client struct {
+	APIKey    string
+	Endpoint  *url.URL
+	SkipWaits bool
+}
 
-func Call(method string, resp any, params map[string]string) error {
+func NewFromEnv() *Client {
+	apiKey := os.Getenv("FLICKR_API_KEY")
+	if apiKey == "" {
+		log.Fatal("FLICKR_API_KEY not set")
+	}
+
+	endpoint := os.Getenv("FLICKR_ENDPOINT")
+	if endpoint == "" {
+		log.Fatal("FLICKR_ENDPOINT not set")
+	}
+
+	fc, err := New(apiKey, endpoint)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return fc
+}
+
+func New(apiKey string, endpoint string) (*Client, error) {
+	endpointURL, err := url.Parse(endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("parse endpoint: %w", err)
+	}
+	return &Client{
+		APIKey:   apiKey,
+		Endpoint: endpointURL,
+	}, nil
+}
+
+func (f *Client) Download(ctx context.Context, url string) (io.ReadCloser, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create request: %w", err)
+	}
+	req.Header.Set("User-Agent", "github.com/dzfranklin/contourguessr-ingest")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request: %w", err)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("HTTP status %d", resp.StatusCode)
+	}
+	return resp.Body, nil
+}
+
+var lastCall time.Time
+var callMu sync.Mutex
+
+func (f *Client) Call(ctx context.Context, method string, resp any, params map[string]string) error {
+	if !f.SkipWaits {
+		callMu.Lock()
+		defer callMu.Unlock()
+		time.Sleep(time.Until(lastCall.Add(1 * time.Second)))
+		lastCall = time.Now()
+	}
+
+	if params == nil {
+		params = make(map[string]string)
+	}
 	params["method"] = method
 	params["format"] = "json"
 	params["nojsoncallback"] = "1"
@@ -79,95 +116,38 @@ func Call(method string, resp any, params map[string]string) error {
 		query.Set(k, v)
 	}
 
-	r := *flickrEndpoint
+	r := *f.Endpoint
 	r.Path = "/services/rest"
 	r.RawQuery = query.Encode()
-	log.Println("flickr: ", r.String())
+	u := r.String()
 
-	mu.Lock()
-	defer mu.Unlock()
-	wait := time.Until(lastCall.Add(time.Second + 100*time.Millisecond))
-	if wait > 0 {
-		time.Sleep(wait)
-	}
-	lastCall = time.Now()
+	return backoff.Retry(func() error {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
+		if err != nil {
+			return err
+		}
+		req.Header.Set("X-Api-Key", f.APIKey)
 
-	req, err := http.NewRequest(http.MethodGet, r.String(), nil)
-	if err != nil {
-		return err
-	}
-	req.Header.Set("X-Api-Key", flickrApiKey)
+		httpResp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if httpResp.StatusCode != http.StatusOK {
+			return fmt.Errorf("HTTP status %d", httpResp.StatusCode)
+		}
 
-	httpResp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if httpResp.StatusCode != http.StatusOK {
-		return fmt.Errorf("HTTP status %d", httpResp.StatusCode)
-	}
+		defer httpResp.Body.Close()
 
-	defer httpResp.Body.Close()
+		body, err := io.ReadAll(httpResp.Body)
+		if err != nil {
+			return err
+		}
 
-	body, err := io.ReadAll(httpResp.Body)
-	if err != nil {
-		return err
-	}
+		err = json.Unmarshal(body, &resp)
+		if err != nil {
+			return err
+		}
 
-	err = json.Unmarshal(body, &resp)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-/*
-SourceURL returns the URL of the photo with the specified size.
-
-Available sizes:
-
-	s	thumbnail	75	cropped square
-	q	thumbnail	150	cropped square
-	t	thumbnail	100
-	m	small	240
-	n	small	320
-	w	small	400
-	(none)	medium	500
-	z	medium	640
-	c	medium	800
-	b	large	1024
-*/
-func SourceURL(photo Photo, size string) string {
-	// https://live.staticflickr.com/{server-id}/{id}_{secret}_{size-suffix}.jpg
-	return "https://live.staticflickr.com/" + photo.Server + "/" + photo.ID + "_" + photo.Secret + "_" + size + ".jpg"
-}
-
-func SourceURLFromID(id string, size string) string {
-	var details struct {
-		Photo struct {
-			ID     string `json:"id"`
-			Server string `json:"server"`
-			Secret string `json:"secret"`
-		} `json:"photo"`
-	}
-	err := Call("flickr.photos.getInfo", &details, map[string]string{
-		"photo_id": id,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	photo := Photo{
-		ID:     id,
-		Server: details.Photo.Server,
-		Secret: details.Photo.Secret,
-	}
-
-	return SourceURL(photo, size)
-}
-
-func hash(s string) uint64 {
-	h := fnv.New64a()
-	_, _ = h.Write([]byte(s))
-	return h.Sum64()
+		return nil
+	}, backoff.NewExponentialBackOff())
 }

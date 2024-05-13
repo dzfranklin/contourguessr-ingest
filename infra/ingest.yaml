@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingest
+  namespace: contourguessr
+  labels:
+    app: ingest
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ingest
+  template:
+    metadata:
+      labels:
+        app: ingest
+    spec:
+      containers:
+        - name: ingest
+          image: ghcr.io/dzfranklin/contourguessr-ingest:v0.12
+          ports:
+            - containerPort: 81
+              name: admin
+          env:
+            - name: FLICKR_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: flickr-api-key
+                  key: key
+            - name: FLICKR_ENDPOINT
+              value: "http://server.flickr-api-proxy.svc.cluster.local"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: cg-database
+                  key: url
+            - name: REDIS_ADDR
+              value: "redis.default.svc.cluster.local:6379"
+            - name: MINIO_ENDPOINT
+              value: "minio.dfranklin.dev"
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-ingest-credentials
+                  key: access-key
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                  secretKeyRef:
+                    name: minio-ingest-credentials
+                    key: secret-key
+            - name: ADMIN_MAPTILER_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: admin-maptiler-api-credentials
+                  key: key
+            - name: APP_ENV
+              value: "production"
+            - name: ADMIN_PORT
+              value: "81"
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: admin
+  namespace: contourguessr
+  labels:
+    app: admin
+spec:
+  defaultBackend:
+    service:
+      name: admin
+      port:
+        name: http
+  ingressClassName: tailscale
+  tls:
+    - hosts:
+        - cg-admin
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin
+  namespace: contourguessr
+  labels:
+    app: admin
+spec:
+  selector:
+    app: ingest
+  ports:
+    - name: http
+      port: 80
+      targetPort: admin

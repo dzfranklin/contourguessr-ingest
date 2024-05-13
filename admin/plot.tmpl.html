@@ -42,10 +42,7 @@
       <button type="submit">Update</button>
 
         {{ if .SelectedRegion }}
-            {{ .ValidCount }} valid,
-            {{ .InvalidCount }} invalid,
-            {{ .TotalCount }} total,
-            ({{ .ValidPercent }} valid)
+            {{ .TotalCount }} total
         {{ end }}
     </form>
 
@@ -155,20 +152,10 @@
                       10, 2,
                       14, 8,
                   ],
-                  'circle-color': [
-                      'case',
-                      ['get', 'is_accepted'],
-                      'hsla(99,100%,30%,0.8)',
-                      'hsla(23, 100%, 50%, 0.8)',
-                  ],
-                  'circle-stroke-width': 4,
-                  'circle-stroke-color': [
-                      'interpolate',
-                      ['linear'],
-                      ['get', 'validity_score'],
-                      0, 'hsla(23, 100%, 50%, 0.8)',
-                      1, 'hsla(99,100%,30%,0.8)',
-                  ]
+                  'circle-color': 'hsl(189,100%,50%)',
+                  'circle-opacity': 0.7,
+                  'circle-stroke-width': 2,
+                  'circle-stroke-color': 'hsl(193,80%,34%)',
               },
           });
 
@@ -190,9 +177,6 @@
               elem.append(kvTableOf(
                   ["Web URL", webURLEl],
                   ["Geo", f.geometry.coordinates.join(', ')],
-                  ["Validity Score", props.validity_score.toFixed(4)],
-                  ["Validity Model", props.validity_model],
-                  ["Score updated at (UTC)", props.score_updated_at],
               ));
 
               new maptilersdk.Popup({maxWidth: 'none'})
