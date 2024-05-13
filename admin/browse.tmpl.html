@@ -95,7 +95,10 @@
       <ul class="entries">
           {{ range .Entries }}
             <li>
-              <img src="{{ .MediumSource }}" alt="">
+              <a href="{{ .LargeSource }}">
+                <img src="{{ .MediumSource }}" alt="">
+              </a>
+
               <div class="footer">
                   {{ if .HasGPS }}<span class="badge">GPS</span>{{ end }}
                   {{ if eq $.Region "" }}

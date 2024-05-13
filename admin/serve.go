@@ -4,22 +4,26 @@ import (
 	"context"
 	"errors"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/minio/minio-go/v7"
 	"log"
 	"net/http"
 )
 
 var db *pgxpool.Pool
+var mc *minio.Client
 var mtApiKey string
 
 func Serve(
 	ctx context.Context,
 	pool *pgxpool.Pool,
+	minioClient *minio.Client,
 	maptilerAPIKey string,
 	addr string,
 ) {
 	// Setup globals
-	mtApiKey = maptilerAPIKey
 	db = pool
+	mc = minioClient
+	mtApiKey = maptilerAPIKey
 
 	// Serve
 

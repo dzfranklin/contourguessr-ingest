@@ -3,9 +3,7 @@ package repos
 import (
 	"context"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/jackc/pgx/v5/tracelog"
 	"log"
-	"os"
 )
 
 type Repo struct {
@@ -18,13 +16,7 @@ func Connect(databaseURL string) (*Repo, error) {
 		return nil, err
 	}
 
-	if os.Getenv("TRACE_SQL") != "" {
-		l := &traceLogger{log.New(log.Writer(), "pgx: ", log.LstdFlags)}
-		config.ConnConfig.Tracer = &tracelog.TraceLog{
-			Logger:   l,
-			LogLevel: tracelog.LogLevelInfo,
-		}
-	}
+	config.ConnConfig.Tracer = &tracer{}
 
 	db, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
@@ -36,12 +28,4 @@ func Connect(databaseURL string) (*Repo, error) {
 
 func (r *Repo) Pool() *pgxpool.Pool {
 	return r.db
-}
-
-type traceLogger struct {
-	*log.Logger
-}
-
-func (l *traceLogger) Log(_ context.Context, level tracelog.LogLevel, msg string, data map[string]any) {
-	l.Printf("%s: %s %+v", level, msg, data)
 }

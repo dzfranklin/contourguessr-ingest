@@ -35,6 +35,17 @@ var funcMap = template.FuncMap{
 		}
 		return fmt.Sprintf("%.2f%%", float64(numerator)/float64(denominator)*100)
 	},
+	"iecBytes": func(bytes int64) string {
+		if bytes < 1024 {
+			return fmt.Sprintf("%d B", bytes)
+		} else if bytes < 1024*1024 {
+			return fmt.Sprintf("%.2f KiB", float64(bytes)/1024)
+		} else if bytes < 1024*1024*1024 {
+			return fmt.Sprintf("%.2f MiB", float64(bytes)/1024/1024)
+		} else {
+			return fmt.Sprintf("%.2f GiB", float64(bytes)/1024/1024/1024)
+		}
+	},
 }
 
 func Mux() http.Handler {
@@ -62,6 +73,7 @@ func Mux() http.Handler {
 	navEntries = []navEntry{
 		{Path: "/", Title: "Home"},
 		{Path: "/overview", Title: "Overview"},
+		{Path: "/storage", Title: "Storage"},
 		{Path: "/browse", Title: "Browse"},
 		{Path: "/plot", Title: "Plot"},
 	}
@@ -70,6 +82,7 @@ func Mux() http.Handler {
 
 	mux.HandleFunc("/", indexHandler)
 	mux.HandleFunc("/overview", overviewHandler)
+	mux.HandleFunc("/storage", storageHandler)
 	mux.HandleFunc("/plot", plotHandler)
 	mux.HandleFunc("/browse", browseHandler)
 

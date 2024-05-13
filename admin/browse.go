@@ -99,6 +99,7 @@ type browseEntry struct {
 	RegionID     int
 	RegionName   string
 	MediumSource string
+	LargeSource  string
 	HasGPS       bool
 	OriginalURL  string
 }
@@ -110,7 +111,7 @@ func loadBrowsePage(ctx context.Context, regionId *int, pageNum int) (bool, []br
 	var err error
 	if regionId == nil {
 		rows, err = db.Query(ctx, `
-			SELECT f.id, r.id, r.name, f.medium->>'source', f.info->'owner'->>'nsid',
+			SELECT f.id, r.id, r.name, f.medium->>'source', f.large->>'source', f.info->'owner'->>'nsid',
 				   coalesce(f.exif@>'[{"tag": "GPSLatitude"}]'::jsonb and f.exif@>'[{"tag": "GPSLongitude"}]'::jsonb, false)
 			FROM flickr f
 			JOIN regions r ON f.region_id = r.id
@@ -119,7 +120,7 @@ func loadBrowsePage(ctx context.Context, regionId *int, pageNum int) (bool, []br
 	`, perPage, (pageNum-1)*perPage)
 	} else {
 		rows, err = db.Query(ctx, `
-			SELECT f.id, r.id, r.name, f.medium->>'source', f.info->'owner'->>'nsid',
+			SELECT f.id, r.id, r.name, f.medium->>'source', f.large->>'source', f.info->'owner'->>'nsid',
 				   coalesce(f.exif@>'[{"tag": "GPSLatitude"}]'::jsonb and f.exif@>'[{"tag": "GPSLongitude"}]'::jsonb, false)
 			FROM flickr f
 			JOIN regions r ON f.region_id = r.id
@@ -137,7 +138,7 @@ func loadBrowsePage(ctx context.Context, regionId *int, pageNum int) (bool, []br
 	for rows.Next() {
 		var entry browseEntry
 		var owner string
-		err = rows.Scan(&entry.Id, &entry.RegionID, &entry.RegionName, &entry.MediumSource, &owner, &entry.HasGPS)
+		err = rows.Scan(&entry.Id, &entry.RegionID, &entry.RegionName, &entry.MediumSource, &entry.LargeSource, &owner, &entry.HasGPS)
 		if err != nil {
 			return false, nil, err
 		}

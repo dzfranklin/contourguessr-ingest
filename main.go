@@ -71,6 +71,7 @@ func main() {
 	go admin.Serve(
 		ctx,
 		repo.Pool(),
+		mc,
 		mustGetEnv("ADMIN_MAPTILER_API_KEY"),
 		adminHost+":"+adminPort,
 	)
@@ -88,6 +89,8 @@ func main() {
 }
 
 func doStep(ctx context.Context) bool {
+	start := time.Now()
+
 	regions, err := repo.ListRegions(ctx)
 	if err != nil {
 		log.Fatal(err)
@@ -110,17 +113,20 @@ func doStep(ctx context.Context) bool {
 	}
 
 	pick := candidates[rand.Intn(len(candidates))]
-	log.Printf("%d of %d regions need checking, picked %d (%s)", len(candidates), len(regions), pick.Id, pick.Name)
+	log.Printf("step start: %d of %d regions need checking, picked region %d (%s)", len(candidates), len(regions), pick.Id, pick.Name)
 
 	cursor, photos, err := flickrindexer.Step(ctx, fc, mc, pick.Region, pick.Cursor)
 	if err != nil {
-		log.Fatal(fmt.Errorf("error doing step on %d: %w", pick.Id, err))
+		log.Fatal(fmt.Errorf("error doing step on region %d: %w", pick.Id, err))
 	}
 
 	err = repo.SaveStep(ctx, pick.Id, cursor, photos)
 	if err != nil {
-		log.Fatal(fmt.Errorf("error saving step of %d: %w", pick.Id, err))
+		log.Fatal(fmt.Errorf("error saving step of region %d: %w", pick.Id, err))
 	}
+
+	elapsed := time.Since(start)
+	log.Printf("step end: inserted %d photos of region %d in %s", len(photos), pick.Id, elapsed)
 
 	return false
 }

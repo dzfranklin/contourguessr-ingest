@@ -3,13 +3,14 @@ module contourguessr-ingest
 go 1.22.2
 
 require (
+	github.com/DataDog/go-sqllexer v0.0.11
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/jackc/pgx/v5 v5.5.5
 	github.com/joho/godotenv v1.5.1
 	github.com/minio/minio-go/v7 v7.0.70
 	github.com/paulmach/orb v0.11.1
 	github.com/redis/go-redis/v9 v9.5.1
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.4
 )
 
 require (

@@ -1,0 +1,108 @@
+{{ define "title" }}Storage{{ end }}
+
+{{ define "content" }}
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <div class="flex flex-col gap-8">
+    <div>
+      <h2>Summary</h2>
+      <table class="kv">
+        <tbody>
+        <tr>
+          <td>Total count</td>
+          <td>{{ .D.TotalCount }}</td>
+        </tr>
+        <tr>
+          <td>Total size</td>
+          <td>{{ .D.TotalSize | iecBytes }}</td>
+        </tr>
+        <tr>
+          <td>Mean size</td>
+          <td>{{ .D.MeanSize | iecBytes }}</td>
+        </tr>
+        <tr>
+          <td>Median size</td>
+          <td>{{ .D.MedianSize | iecBytes }}</td>
+        </tr>
+        <tr>
+          <td>Total size of all photos greater than 4 MiB</td>
+          <td>{{ .D.SizeAllGreater4MB | iecBytes }}</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <h2>Histogram</h2>
+      <div id="histogram"></div>
+    </div>
+
+    <div class="flex gap-4">
+      <div>
+        <h2>Size</h2>
+        <div id="size-chart"></div>
+      </div>
+
+      <div>
+        <h2>Count</h2>
+        <div id="count-chart"></div>
+      </div>
+    </div>
+  </div>
+{{ end }}
+
+{{ define "scripts" }}
+  <script>
+      const histogramBucketsJSON = {{ .HistogramBucketsJSON }};
+      const runningSizeJSON = {{ .RunningSizeJSON }};
+  </script>
+
+  <script type="module">
+      import * as Plot from "https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6/+esm";
+
+      const histogramBuckets = JSON.parse(histogramBucketsJSON);
+      const histogram = Plot.plot({
+          y: {
+              grid: true,
+          },
+          x: {
+              label: "Size (MiB)",
+          },
+          marks: [
+              Plot.axisY({tickFormat: "s"}),
+              Plot.barY(histogramBuckets, {x: "Size", y: "Count"}),
+          ]
+      });
+      document.querySelector("#histogram").append(histogram);
+
+      const runningSize = JSON.parse(runningSizeJSON)
+          .map(d => ({
+              ...d,
+              Time: new Date(d.Time),
+              Size: d.Size / 1024 / 1024 / 1024
+          }));
+      const sizeChart = Plot.plot({
+          y: {
+              grid: true,
+              label: "Size (GiB)",
+          },
+          x: {grid: true},
+          marks: [
+              Plot.line(runningSize, {x: "Time", y: "Size"}),
+          ]
+      });
+      document.querySelector("#size-chart").append(sizeChart);
+
+      const countChart = Plot.plot({
+          y: {grid: true},
+          x: {grid: true},
+          marks: [
+              Plot.line(runningSize, {x: "Time", y: "Count"}),
+              Plot.axisY({tickFormat: "s"}),
+          ]
+      });
+      document.querySelector("#count-chart").append(countChart);
+  </script>
+{{ end }}
+
+{{ template "layout.tmpl.html" . }}

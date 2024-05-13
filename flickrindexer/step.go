@@ -76,6 +76,7 @@ func Step(
 	}
 
 	var photos []repos.FlickrPhoto
+	skipped := 0
 	for _, sp := range searchPage.Photos.Photo {
 		if ctx.Err() != nil {
 			return repos.Cursor{}, nil, ctx.Err()
@@ -90,12 +91,14 @@ func Step(
 			return repos.Cursor{}, nil, fmt.Errorf("parse latitude: %w", err)
 		}
 		if !planar.MultiPolygonContains(region.Geo, orb.Point{lng, lat}) {
+			skipped++
 			continue
 		}
 
 		p, err := processPhoto(ctx, fc, region.Id, sp)
 		if err != nil {
 			log.Printf("error processing photo https://flickr.com/photos/%s/%s: %v", sp.Owner, sp.Id, err)
+			skipped++
 			continue
 		}
 		photos = append(photos, p)
@@ -122,6 +125,8 @@ func Step(
 		now := time.Now()
 		cursor.LastCheck = &now
 	}
+
+	log.Printf("skipped %d / %d photos in page", skipped, len(searchPage.Photos.Photo))
 
 	return cursor, photos, nil
 }
@@ -270,6 +275,7 @@ func downloadSizesForPhoto(ctx context.Context, fc Flickr, mc MinIO, photo *repo
 	for _, size := range sizes {
 		if size.Media != "photo" ||
 			size.Label == "Square" || size.Label == "Large Square" || // is cropped
+			(size.Width > 2048 || size.Height > 2048) || // save storage space
 			size.Label == "Original" { // has exif rotation nuances, etc
 			continue
 		}
