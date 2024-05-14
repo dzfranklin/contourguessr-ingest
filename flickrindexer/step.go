@@ -304,6 +304,7 @@ func downloadSizesForPhoto(ctx context.Context, fc Flickr, mc MinIO, photo *repo
 			large = &size
 		}
 	}
+	// TODO: This can happen for a small original photo. Should propagate up that it's a normal skip.
 	if medium == nil {
 		return fmt.Errorf("missing medium size")
 	}
