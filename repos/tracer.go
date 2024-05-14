@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/DataDog/go-sqllexer"
 	"github.com/jackc/pgx/v5"
-	"log"
 	"log/slog"
 	"time"
 )
@@ -54,7 +53,7 @@ func (tl *tracer) TraceQueryEnd(ctx context.Context, _ *pgx.Conn, data pgx.Trace
 	}
 
 	if interval > slowQueryThreshold {
-		log.Printf("slow query: %s took %s (commandTag %s)", queryData.sql, interval, data.CommandTag.String())
+		slog.Warn("slow query", "sql", queryData.sql, "interval", interval)
 	}
 }
 
@@ -83,7 +82,7 @@ func (tl *tracer) TraceBatchStart(ctx context.Context, _ *pgx.Conn, data pgx.Tra
 
 func (tl *tracer) TraceBatchQuery(_ context.Context, _ *pgx.Conn, data pgx.TraceBatchQueryData) {
 	if data.Err != nil {
-		log.Printf("trace error: BatchQuery: %s: %s", data.Err, data.SQL)
+		slog.Error("trace error: BatchQuery", "err", data.Err, "sql", data.SQL)
 		return
 	}
 }
@@ -100,7 +99,7 @@ func (tl *tracer) TraceBatchEnd(ctx context.Context, _ *pgx.Conn, data pgx.Trace
 	}
 
 	if interval > slowQueryThreshold {
-		slog.Error("slow batch", "sql", queryData.sql, "interval", interval)
+		slog.Warn("slow batch", "sql", queryData.sql, "interval", interval)
 	}
 }
 
@@ -125,7 +124,7 @@ func (tl *tracer) TraceCopyFromEnd(ctx context.Context, _ *pgx.Conn, data pgx.Tr
 	interval := endTime.Sub(copyFromData.startTime)
 
 	if data.Err != nil {
-		log.Printf("trace error: CopyFrom: %s: tableName %s, columnNames %v, time %s", data.Err, copyFromData.TableName, copyFromData.ColumnNames, interval)
+		slog.Error("trace error: CopyFrom", "err", data.Err, "tableName", copyFromData.TableName, "columnNames", copyFromData.ColumnNames, "interval", interval)
 		return
 	}
 }
