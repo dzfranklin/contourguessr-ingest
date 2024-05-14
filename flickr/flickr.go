@@ -10,7 +10,6 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
-	"os"
 	"sync"
 	"time"
 )
@@ -47,24 +46,6 @@ type Client struct {
 	APIKey    string
 	Endpoint  *url.URL
 	SkipWaits bool
-}
-
-func NewFromEnv() *Client {
-	apiKey := os.Getenv("FLICKR_API_KEY")
-	if apiKey == "" {
-		log.Fatal("FLICKR_API_KEY not set")
-	}
-
-	endpoint := os.Getenv("FLICKR_ENDPOINT")
-	if endpoint == "" {
-		log.Fatal("FLICKR_ENDPOINT not set")
-	}
-
-	fc, err := New(apiKey, endpoint)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return fc
 }
 
 func New(apiKey string, endpoint string) (*Client, error) {
