@@ -263,17 +263,17 @@ func downloadSizes(ctx context.Context, fc Flickr, mc MinIO, photos []repos.Phot
 		}(i)
 	}
 
-	var errors []dlResult
+	var errs []dlResult
 	for range photos {
 		res := <-resultChan
 		if res.err != nil {
-			errors = append(errors, res)
+			errs = append(errs, res)
 			log.Printf("download failed: %v: download %s", res.err, res.id)
 		}
 	}
 
-	if len(errors) > len(photos)/4 {
-		return fmt.Errorf("too many errors: %d/%d failed: %s", len(errors), len(photos), errors)
+	if len(errs) > len(photos)/4 {
+		return fmt.Errorf("too many errors: %d/%d failed: %s", len(errs), len(photos), errs)
 	}
 	return nil
 }
