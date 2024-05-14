@@ -109,9 +109,7 @@ func Step(
 			cursor.MinUploadDate = lastTime
 			cursor.Page = 1
 		}
-	}
-
-	if len(searchPage.Photos.Photo) == 0 {
+	} else {
 		now := time.Now()
 		cursor.LastCheck = &now
 	}
