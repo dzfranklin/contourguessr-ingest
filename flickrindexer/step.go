@@ -5,6 +5,7 @@ import (
 	"contourguessr-ingest/flickr"
 	"contourguessr-ingest/repos"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/minio/minio-go/v7"
 	"github.com/paulmach/orb"
@@ -45,7 +46,7 @@ func Step(
 	mc MinIO,
 	region repos.Region,
 	cursor repos.Cursor,
-) (repos.Cursor, []repos.FlickrPhoto, error) {
+) (repos.Cursor, []repos.Photo, error) {
 	isVerbose := verboseStatus(ctx)
 
 	if cursor.Page == 0 {
@@ -75,7 +76,7 @@ func Step(
 		return repos.Cursor{}, nil, err
 	}
 
-	var photos []repos.FlickrPhoto
+	var photos []repos.Photo
 	skipped := 0
 	for _, sp := range searchPage.Photos.Photo {
 		if ctx.Err() != nil {
@@ -96,7 +97,10 @@ func Step(
 		}
 
 		p, err := processPhoto(ctx, fc, region.Id, sp)
-		if err != nil {
+		if errors.Is(err, ErrorSkipPhoto) {
+			skipped++
+			continue
+		} else if err != nil {
 			log.Printf("error processing photo https://flickr.com/photos/%s/%s: %v", sp.Owner, sp.Id, err)
 			skipped++
 			continue
@@ -145,50 +149,19 @@ type searchResponsePhoto struct {
 	DateUpload string
 }
 
+var ErrorSkipPhoto = fmt.Errorf("skip photo")
+
 func processPhoto(
 	ctx context.Context,
 	fc Flickr,
 	regionId int,
 	searchInfo searchResponsePhoto,
-) (repos.FlickrPhoto, error) {
+) (repos.Photo, error) {
 	isVerbose := verboseStatus(ctx)
 	id := searchInfo.Id
-	out := repos.FlickrPhoto{
+	out := repos.Photo{
 		Id:       id,
 		RegionId: regionId,
-	}
-
-	var parsedInfo struct {
-		Photo map[string]json.RawMessage
-	}
-	if isVerbose {
-		log.Printf("getInfo: %s", id)
-	}
-	err := fc.Call(ctx, "flickr.photos.getInfo", &parsedInfo, map[string]string{
-		"photo_id": id,
-		"extras":   "sizes",
-	})
-	if err != nil {
-		return repos.FlickrPhoto{}, fmt.Errorf("getInfo: %w", err)
-	}
-
-	sizesJSON, ok := parsedInfo.Photo["sizes"]
-	if !ok {
-		return repos.FlickrPhoto{}, fmt.Errorf("gitInfo missing sizes extra")
-	}
-	var sizes struct {
-		Size json.RawMessage
-	}
-	err = json.Unmarshal(sizesJSON, &sizes)
-	if err != nil {
-		return repos.FlickrPhoto{}, fmt.Errorf("unmarshal sizes from getInfo extra: %w", err)
-	}
-	out.Sizes = sizes.Size
-
-	delete(parsedInfo.Photo, "sizes")
-	out.Info, err = json.Marshal(parsedInfo.Photo)
-	if err != nil {
-		return repos.FlickrPhoto{}, fmt.Errorf("marshal info: %w", err)
 	}
 
 	var exif struct {
@@ -199,13 +172,66 @@ func processPhoto(
 	if isVerbose {
 		log.Printf("getExif: %s", id)
 	}
-	err = fc.Call(ctx, "flickr.photos.getExif", &exif, map[string]string{
+	err := fc.Call(ctx, "flickr.photos.getExif", &exif, map[string]string{
 		"photo_id": id,
 	})
 	if err != nil {
-		return repos.FlickrPhoto{}, fmt.Errorf("getExif: %w", err)
+		return repos.Photo{}, fmt.Errorf("getExif: %w", err)
 	}
 	out.Exif = exif.Photo.Exif
+
+	var parsedExif []struct {
+		Tag string
+	}
+	err = json.Unmarshal(exif.Photo.Exif, &parsedExif)
+	if err != nil {
+		return repos.Photo{}, fmt.Errorf("unmarshal exif: %w", err)
+	}
+	var hasGPSLng, hasGPSLat bool
+	for _, tag := range parsedExif {
+		switch tag.Tag {
+		case "GPSLongitude":
+			hasGPSLng = true
+		case "GPSLatitude":
+			hasGPSLat = true
+		}
+	}
+	if !(hasGPSLng && hasGPSLat) {
+		return repos.Photo{}, ErrorSkipPhoto
+	}
+
+	var parsedInfo struct {
+		Photo map[string]json.RawMessage
+	}
+	if isVerbose {
+		log.Printf("getInfo: %s", id)
+	}
+	err = fc.Call(ctx, "flickr.photos.getInfo", &parsedInfo, map[string]string{
+		"photo_id": id,
+		"extras":   "sizes",
+	})
+	if err != nil {
+		return repos.Photo{}, fmt.Errorf("getInfo: %w", err)
+	}
+
+	sizesJSON, ok := parsedInfo.Photo["sizes"]
+	if !ok {
+		return repos.Photo{}, fmt.Errorf("gitInfo missing sizes extra")
+	}
+	var sizes struct {
+		Size json.RawMessage
+	}
+	err = json.Unmarshal(sizesJSON, &sizes)
+	if err != nil {
+		return repos.Photo{}, fmt.Errorf("unmarshal sizes from getInfo extra: %w", err)
+	}
+	out.Sizes = sizes.Size
+
+	delete(parsedInfo.Photo, "sizes")
+	out.Info, err = json.Marshal(parsedInfo.Photo)
+	if err != nil {
+		return repos.Photo{}, fmt.Errorf("marshal info: %w", err)
+	}
 
 	return out, nil
 }
@@ -223,7 +249,7 @@ func (r dlResult) String() string {
 	}
 }
 
-func downloadSizes(ctx context.Context, fc Flickr, mc MinIO, photos []repos.FlickrPhoto) error {
+func downloadSizes(ctx context.Context, fc Flickr, mc MinIO, photos []repos.Photo) error {
 	resultChan := make(chan dlResult, len(photos))
 
 	sem := make(chan struct{}, maxConcurrentPhotoDownloads)
@@ -242,6 +268,7 @@ func downloadSizes(ctx context.Context, fc Flickr, mc MinIO, photos []repos.Flic
 		res := <-resultChan
 		if res.err != nil {
 			errors = append(errors, res)
+			log.Printf("download failed: %v: download %s", res.err, res.id)
 		}
 	}
 
@@ -251,7 +278,7 @@ func downloadSizes(ctx context.Context, fc Flickr, mc MinIO, photos []repos.Flic
 	return nil
 }
 
-func downloadSizesForPhoto(ctx context.Context, fc Flickr, mc MinIO, photo *repos.FlickrPhoto) error {
+func downloadSizesForPhoto(ctx context.Context, fc Flickr, mc MinIO, photo *repos.Photo) error {
 	isVerbose := verboseStatus(ctx)
 	if isVerbose {
 		log.Printf("downloadSizesForPhoto: %s", photo.Id)

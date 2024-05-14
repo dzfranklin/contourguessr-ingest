@@ -2,6 +2,7 @@ package repos
 
 import (
 	"context"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
 )
@@ -9,6 +10,8 @@ import (
 type Repo struct {
 	db *pgxpool.Pool
 }
+
+var ErrNotFound = pgx.ErrNoRows
 
 func Connect(databaseURL string) (*Repo, error) {
 	config, err := pgxpool.ParseConfig(databaseURL)

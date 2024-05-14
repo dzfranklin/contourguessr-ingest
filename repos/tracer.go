@@ -27,7 +27,7 @@ type traceQueryData struct {
 	sql       string
 }
 
-const slowQueryThreshold = 100 * time.Millisecond
+const slowQueryThreshold = 200 * time.Millisecond
 
 func (tl *tracer) TraceQueryStart(ctx context.Context, _ *pgx.Conn, data pgx.TraceQueryStartData) context.Context {
 	sql := data.SQL

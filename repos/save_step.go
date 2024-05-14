@@ -5,7 +5,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (r *Repo) SaveStep(ctx context.Context, region int, cursor Cursor, photos []FlickrPhoto) error {
+func (r *Repo) SaveStep(ctx context.Context, region int, cursor Cursor, photos []Photo) error {
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
 		return err

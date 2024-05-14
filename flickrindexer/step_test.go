@@ -18,7 +18,7 @@ var denali = makeRegion("MULTIPOLYGON(((-148.9802346 63.4235725,-148.8146541 63.
 
 type Expect struct {
 	cursor repos.Cursor
-	photos []repos.FlickrPhoto
+	photos []repos.Photo
 	err    error
 }
 
@@ -136,7 +136,7 @@ func TestStep(t *testing.T) {
 			),
 			expect: Expect{
 				cursor: repos.Cursor{MinUploadDate: time.Unix(0, 0), Page: 1},
-				photos: []repos.FlickrPhoto{
+				photos: []repos.Photo{
 					{
 						RegionId: 42,
 						Id:       "34742333",
@@ -301,7 +301,7 @@ func TestStep(t *testing.T) {
 			mc: mockMC(t).noop(),
 			expect: Expect{
 				cursor: repos.Cursor{MinUploadDate: time.Unix(1151810509, 0), Page: 1},
-				photos: []repos.FlickrPhoto{
+				photos: []repos.Photo{
 					{Id: "34742333", RegionId: 42, Info: json.RawMessage(`{}`), Sizes: json.RawMessage(`[ {"label": "Medium", "width": 500, "height": 400, "source": "https://fake/medium.jpg", "media": "photo"} ]`), Exif: json.RawMessage(`[]`)},
 					{Id: "34742333", RegionId: 42, Info: json.RawMessage(`{}`), Sizes: json.RawMessage(`[ {"label": "Medium", "width": 500, "height": 400, "source": "https://fake/medium.jpg", "media": "photo"} ]`), Exif: json.RawMessage(`[]`)},
 					{Id: "34742333", RegionId: 42, Info: json.RawMessage(`{}`), Sizes: json.RawMessage(`[ {"label": "Medium", "width": 500, "height": 400, "source": "https://fake/medium.jpg", "media": "photo"} ]`), Exif: json.RawMessage(`[]`)},
