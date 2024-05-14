@@ -27,10 +27,13 @@ var debugOnlyRegion *int
 func main() {
 	ctx := context.Background()
 
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		AddSource: true,
+	}))
 	if os.Getenv("APP_ENV") == "development" {
 		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-			Level: slog.LevelDebug,
+			Level:     slog.LevelDebug,
+			AddSource: true,
 		}))
 	}
 	slog.SetDefault(logger)
