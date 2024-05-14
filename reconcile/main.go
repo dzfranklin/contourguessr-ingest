@@ -10,6 +10,7 @@ import (
 	"github.com/minio/minio-go/v7"
 	miniocredentials "github.com/minio/minio-go/v7/pkg/credentials"
 	"log"
+	"log/slog"
 	"os"
 	"strings"
 )
@@ -26,7 +27,7 @@ func main() {
 
 	err := godotenv.Load(".env", ".env.local")
 	if err != nil {
-		log.Println(err)
+		slog.Info("no dotenv", err)
 	}
 
 	flag.Usage = func() {
@@ -61,9 +62,9 @@ func main() {
 
 func doMain(ctx context.Context) error {
 	if *dryRun {
-		log.Println("Dry run mode")
+		slog.Warn("Dry run mode")
 	} else {
-		log.Println("Updating object store")
+		slog.Info("Updating object store")
 	}
 
 	var count int

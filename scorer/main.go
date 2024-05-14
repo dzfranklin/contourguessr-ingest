@@ -7,6 +7,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 	"log"
+	"log/slog"
 	"os"
 	"time"
 )
@@ -31,7 +32,7 @@ func main() {
 
 	err := godotenv.Load(".env", ".env.local")
 	if err != nil {
-		log.Println(err)
+		slog.Info("no dotenv", err)
 	}
 
 	databaseURL = os.Getenv("DATABASE_URL")
@@ -67,7 +68,7 @@ func main() {
 		elapsedTime := time.Since(startTime)
 
 		if err != nil {
-			log.Println(err)
+			slog.Error("failed to score batch", "err", err)
 			randSleep(minErrWait, maxErrWait)
 			continue
 		}

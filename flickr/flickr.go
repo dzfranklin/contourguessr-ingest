@@ -7,6 +7,7 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"io"
 	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -122,6 +123,8 @@ func (f *Client) Call(ctx context.Context, method string, resp any, params map[s
 	u := r.String()
 
 	return backoff.Retry(func() error {
+		slog.Debug("flickr call", "method", method, "url", u)
+
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
 		if err != nil {
 			return err

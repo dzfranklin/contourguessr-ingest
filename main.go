@@ -11,6 +11,7 @@ import (
 	"github.com/minio/minio-go/v7"
 	miniocredentials "github.com/minio/minio-go/v7/pkg/credentials"
 	"log"
+	"log/slog"
 	"math/rand"
 	"os"
 	"time"
@@ -23,9 +24,15 @@ var fc *flickr.Client
 func main() {
 	ctx := context.Background()
 
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	if os.Getenv("APP_ENV") == "development" {
+		logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+	}
+	slog.SetDefault(logger)
+
 	err := godotenv.Load(".env", ".env.local")
 	if err != nil {
-		log.Println(err)
+		slog.Info("no dotenv", "err", err)
 	}
 
 	databaseURL := mustGetEnv("DATABASE_URL")
@@ -55,10 +62,6 @@ func main() {
 		fc.SkipWaits = true
 	}
 
-	if os.Getenv("VERBOSE_INDEXER") != "" {
-		ctx = flickrindexer.NewVerboseContext(ctx)
-	}
-
 	adminHost := os.Getenv("ADMIN_HOST")
 	if adminHost == "" {
 		adminHost = "0.0.0.0"
@@ -76,7 +79,7 @@ func main() {
 		adminHost+":"+adminPort,
 	)
 
-	log.Println("Starting indexer")
+	slog.Info("Starting indexer")
 	for {
 		complete := doStep(ctx)
 		if complete {
@@ -113,7 +116,7 @@ func doStep(ctx context.Context) bool {
 	}
 
 	pick := candidates[rand.Intn(len(candidates))]
-	log.Printf("step start: %d of %d regions need checking, picked region %d (%s)", len(candidates), len(regions), pick.Id, pick.Name)
+	slog.Info("step start", "region_id", pick.Id, "region_name", pick.Name, "candidate_regions", len(candidates), "total_regions", len(regions))
 
 	cursor, photos, err := flickrindexer.Step(ctx, fc, mc, pick.Region, pick.Cursor)
 	if err != nil {
@@ -126,7 +129,7 @@ func doStep(ctx context.Context) bool {
 	}
 
 	elapsed := time.Since(start)
-	log.Printf("step end: inserted %d photos of region %d in %s", len(photos), pick.Id, elapsed)
+	slog.Info("step end", "region", pick.Id, "photos", len(photos), "elapsed", elapsed)
 
 	return false
 }

@@ -8,13 +8,14 @@ import (
 	"github.com/minio/minio-go/v7"
 	miniocredentials "github.com/minio/minio-go/v7/pkg/credentials"
 	"log"
+	"log/slog"
 	"os"
 )
 
 func main() {
 	err := godotenv.Load(".env", ".env.local")
 	if err != nil {
-		log.Println(err)
+		slog.Info("no dotenv", err)
 	}
 
 	ctx := context.Background()

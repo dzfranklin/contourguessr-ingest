@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -98,7 +99,7 @@ func templateResponse(w http.ResponseWriter, r *http.Request, name string, data 
 	var tmpl *template.Template
 
 	if appEnv == "development" {
-		log.Println("Loading templates directly (dev mode)")
+		slog.Warn("Loading templates directly (dev mode)")
 		tmpl, err = prepareEmptyTemplate(name).ParseFiles("admin/layout.tmpl.html", "admin/"+name)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

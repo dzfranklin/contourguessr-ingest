@@ -3,7 +3,6 @@ package admin
 import (
 	"context"
 	"github.com/jackc/pgx/v5"
-	"log"
 	"math"
 	"net/http"
 	"strconv"
@@ -38,20 +37,17 @@ func browseHandler(w http.ResponseWriter, r *http.Request) {
 
 	hasNext, entries, err := loadBrowsePage(r.Context(), regionId, pageNum)
 	if err != nil {
-		log.Printf("error loading browse page: %s", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 	pageCount, err := loadPageCount(r.Context(), regionId)
 	if err != nil {
-		log.Printf("error loading page count: %s", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
 	regions, err := listRegions(r.Context())
 	if err != nil {
-		log.Printf("error loading regions: %s", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}

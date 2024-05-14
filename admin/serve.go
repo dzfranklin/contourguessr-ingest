@@ -3,9 +3,11 @@ package admin
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/minio/minio-go/v7"
 	"log"
+	"log/slog"
 	"net/http"
 )
 
@@ -36,16 +38,16 @@ func Serve(
 
 	go func() {
 		<-ctx.Done()
-		log.Println("Shutting down admin server...")
+		slog.Info("Shutting down admin server...")
 		err := srv.Shutdown(context.Background())
 		if err != nil {
-			log.Println("Error shutting down admin server:", err)
+			slog.Error(fmt.Sprintf("error shutting down admin server: %s", err))
 		}
 	}()
 
 	log.Printf("Admin server listening on %s (APP_ENV=%s)\n", addr, appEnv)
 	err := srv.ListenAndServe()
 	if !errors.Is(err, http.ErrServerClosed) {
-		log.Println("Error serving admin server:", err)
+		slog.Error(fmt.Sprintf("error shutting down admin server: %s", err))
 	}
 }

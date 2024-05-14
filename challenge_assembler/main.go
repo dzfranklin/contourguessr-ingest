@@ -7,6 +7,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/joho/godotenv"
 	"log"
+	"log/slog"
 	"math/rand/v2"
 	"os"
 	"strconv"
@@ -20,7 +21,7 @@ func main() {
 
 	err := godotenv.Load(".env", ".env.local")
 	if err != nil {
-		log.Println(err)
+		slog.Info("no dotenv", "err", err)
 	}
 
 	databaseURL := os.Getenv("DATABASE_URL")
@@ -46,10 +47,10 @@ func main() {
 		for _, entry := range batch {
 			err := processEntry(entry)
 			if err != nil {
-				log.Printf("Error processing entry: %v", err)
+				slog.Error(fmt.Sprintf("Error processing entry: %v", err))
 			}
 		}
-		log.Printf("Processed batch of %d entries in %s", len(batch), time.Since(startTime))
+		slog.Info("Processed batch", "batch", len(batch), "elapsed", time.Since(startTime))
 	}
 }
 

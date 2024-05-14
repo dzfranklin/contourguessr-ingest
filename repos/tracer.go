@@ -5,6 +5,7 @@ import (
 	"github.com/DataDog/go-sqllexer"
 	"github.com/jackc/pgx/v5"
 	"log"
+	"log/slog"
 	"time"
 )
 
@@ -33,7 +34,7 @@ func (tl *tracer) TraceQueryStart(ctx context.Context, _ *pgx.Conn, data pgx.Tra
 	sql := data.SQL
 	sql, _, err := normalizer.Normalize(sql)
 	if err != nil {
-		log.Printf("error normalizing SQL: %s", err)
+		slog.Error("error normalizing SQL: %s", "err", err)
 	}
 	return context.WithValue(ctx, traceQueryCtxKey, &traceQueryData{
 		startTime: time.Now(),
@@ -48,7 +49,7 @@ func (tl *tracer) TraceQueryEnd(ctx context.Context, _ *pgx.Conn, data pgx.Trace
 	interval := endTime.Sub(queryData.startTime)
 
 	if data.Err != nil {
-		log.Printf("trace error: Query: %s: %s (time %s)", data.Err, queryData.sql, interval)
+		slog.Error("trace error", "err", data.Err, "sql", queryData.sql, "interval", interval)
 		return
 	}
 
@@ -68,7 +69,7 @@ func (tl *tracer) TraceBatchStart(ctx context.Context, _ *pgx.Conn, data pgx.Tra
 		s := q.SQL
 		s, _, err := normalizer.Normalize(s)
 		if err != nil {
-			log.Printf("error normalizing SQL: %s", err)
+			slog.Error("error normalizing SQL", "err", err)
 		}
 
 		sql[s] += 1
@@ -94,12 +95,12 @@ func (tl *tracer) TraceBatchEnd(ctx context.Context, _ *pgx.Conn, data pgx.Trace
 	interval := endTime.Sub(queryData.startTime)
 
 	if data.Err != nil {
-		log.Printf("trace error: BatchClose: %s (time %s)", data.Err, interval)
+		slog.Error("trace error: BatchClose", "err", data.Err, "interval", interval)
 		return
 	}
 
 	if interval > slowQueryThreshold {
-		log.Printf("slow batch: %v, took %s", queryData.sql, interval)
+		slog.Error("slow batch", "sql", queryData.sql, "interval", interval)
 	}
 }
 
@@ -148,7 +149,7 @@ func (tl *tracer) TraceConnectEnd(ctx context.Context, data pgx.TraceConnectEndD
 	interval := endTime.Sub(connectData.startTime)
 
 	if data.Err != nil {
-		log.Printf("trace error: Connect: %s: host %s, port %d, database %s, time %s", data.Err, connectData.connConfig.Host, connectData.connConfig.Port, connectData.connConfig.Database, interval)
+		slog.Error("trace error: Connect", "err", data.Err, "host", connectData.connConfig.Host, "port", connectData.connConfig.Port, "database", connectData.connConfig.Database, "interval", interval)
 		return
 	}
 }

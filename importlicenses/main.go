@@ -6,13 +6,14 @@ import (
 	"contourguessr-ingest/repos"
 	"github.com/joho/godotenv"
 	"log"
+	"log/slog"
 	"os"
 )
 
 func main() {
 	err := godotenv.Load(".env", ".env.local")
 	if err != nil {
-		log.Println(err)
+		slog.Info("no dotenv", "err", err)
 	}
 
 	databaseURL := mustGetEnv("DATABASE_URL")
