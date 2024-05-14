@@ -76,6 +76,7 @@ func Step(
 			return repos.Cursor{}, nil, fmt.Errorf("parse latitude: %w", err)
 		}
 		if !planar.MultiPolygonContains(region.Geo, orb.Point{lng, lat}) {
+			slog.Debug("skip: not in region", "id", sp.Id, "lng", lng, "lat", lat)
 			skipped++
 			continue
 		}
@@ -97,10 +98,21 @@ func Step(
 		return repos.Cursor{}, nil, fmt.Errorf("download sizes: %w", err)
 	}
 
-	if len(searchPage.Photos.Photo) >= 100 {
-		cursor.Page++
+	slog.Info("skipped", "skipped", skipped, "total", len(searchPage.Photos.Photo))
 
-		if cursor.Page*100 > 2000 {
+	if searchPage.Photos.Page >= searchPage.Photos.Pages {
+		now := time.Now()
+		cursor.LastCheck = &now
+
+		cursor.MinUploadDate = time.Now().Add(-1 * time.Hour)
+		cursor.Page = 1
+
+		slog.Info("completed round of checking", "region_id", region.Id, "region_name", region.Name)
+	} else {
+		cursor.Page++
+		slog.Info("advancing page", "region_id", region.Id, "region_name", region.Name, "new_value", cursor.Page)
+
+		if cursor.Page > 20 {
 			last := searchPage.Photos.Photo[len(searchPage.Photos.Photo)-1]
 			lastTime, err := flickr.ParseTime(last.DateUpload)
 			if err != nil {
@@ -108,19 +120,17 @@ func Step(
 			}
 			cursor.MinUploadDate = lastTime
 			cursor.Page = 1
+			slog.Info("advancing min_upload_date", "region_id", region.Id, "region_name", region.Name, "new_value", cursor.MinUploadDate)
 		}
-	} else {
-		now := time.Now()
-		cursor.LastCheck = &now
 	}
-
-	slog.Info("skipped", "skipped", skipped, "total", len(searchPage.Photos.Photo))
 
 	return cursor, photos, nil
 }
 
 type searchResponse struct {
 	Photos struct {
+		Page  int
+		Pages int
 		Photo []searchResponsePhoto
 	}
 }

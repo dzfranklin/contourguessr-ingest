@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"contourguessr-ingest/repos"
+	_ "embed"
 	"encoding/json"
 	"github.com/minio/minio-go/v7"
 	"github.com/paulmach/orb/encoding/wkt"
@@ -689,7 +690,7 @@ func (m *mcMock) noop() *mcMock {
 	return m
 }
 
-func (m *mcMock) FPutObject(_ context.Context, bucketName, objectName string, filePath string, opts minio.PutObjectOptions) (info minio.UploadInfo, err error) {
+func (m *mcMock) FPutObject(_ context.Context, bucketName, objectName string, _ string, opts minio.PutObjectOptions) (info minio.UploadInfo, err error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 

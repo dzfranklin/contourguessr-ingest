@@ -14,6 +14,7 @@ import (
 	"log/slog"
 	"math/rand"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -21,12 +22,16 @@ var repo *repos.Repo
 var mc *minio.Client
 var fc *flickr.Client
 
+var debugOnlyRegion *int
+
 func main() {
 	ctx := context.Background()
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	if os.Getenv("APP_ENV") == "development" {
-		logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		}))
 	}
 	slog.SetDefault(logger)
 
@@ -60,6 +65,15 @@ func main() {
 	}
 	if os.Getenv("FLICKR_SKIP_WAITS") != "" {
 		fc.SkipWaits = true
+	}
+
+	debugOnlyRegionS := os.Getenv("DEBUG_ONLY_REGION")
+	if debugOnlyRegionS != "" {
+		val, err := strconv.Atoi(debugOnlyRegionS)
+		if err != nil {
+			log.Fatal("DEBUG_ONLY_REGION must be an integer")
+		}
+		debugOnlyRegion = &val
 	}
 
 	adminHost := os.Getenv("ADMIN_HOST")
@@ -104,6 +118,11 @@ func doStep(ctx context.Context) bool {
 		cursor, err := repo.GetCursor(ctx, region.Id)
 		if err != nil {
 			log.Fatal(err)
+		}
+
+		if debugOnlyRegion != nil && region.Id != *debugOnlyRegion {
+			slog.Warn("Skipping due to DEBUG_ONLY_REGION", "region_id", region.Id, "region_name", region.Name)
+			continue
 		}
 
 		if cursor.LastCheck == nil || cursor.LastCheck.Add(24*time.Hour*7).Before(time.Now()) {
