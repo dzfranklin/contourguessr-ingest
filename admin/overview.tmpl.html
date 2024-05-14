@@ -6,7 +6,6 @@
     <tr>
       <th>Region</th>
       <th>Count</th>
-      <th>GPS Count</th>
       <th>Latest</th>
       <th>Last check</th>
     </tr>
@@ -16,7 +15,6 @@
       <tr>
         <td>{{ .RegionName }} ({{ .RegionID }})</td>
         <td>{{ .Count }}</td>
-        <td>{{ .GPSCount }}</td>
         <td>{{ .Latest.Format "2006-01-02" }}</td>
         <td>
             {{ if .LastCheck}}

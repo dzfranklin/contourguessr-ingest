@@ -22,7 +22,6 @@ type loadIngestEntry struct {
 	RegionID   int
 	RegionName string
 	Count      int
-	GPSCount   int
 	Latest     time.Time
 	LastCheck  *time.Time
 }
@@ -30,7 +29,6 @@ type loadIngestEntry struct {
 func loadIngestCounts(ctx context.Context) ([]loadIngestEntry, error) {
 	rows, err := db.Query(ctx, `
 		SELECT r.id, r.name, count(f.id),
-		       count(f.id) filter ( where f.exif @> '[{"tag": "GPSLatitude"}]'::jsonb and f.exif @> '[{"tag": "GPSLongitude"}]'::jsonb),
 		       max(to_timestamp((f.info ->> 'dateuploaded')::int))::date, max(c.last_check)
 		FROM regions r
 				 JOIN region_index_cursors c on r.id = c.region_id
@@ -46,7 +44,7 @@ func loadIngestCounts(ctx context.Context) ([]loadIngestEntry, error) {
 	var counts []loadIngestEntry
 	for rows.Next() {
 		var count loadIngestEntry
-		err = rows.Scan(&count.RegionID, &count.RegionName, &count.Count, &count.GPSCount,
+		err = rows.Scan(&count.RegionID, &count.RegionName, &count.Count,
 			&count.Latest, &count.LastCheck)
 		if err != nil {
 			return nil, err
