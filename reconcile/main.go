@@ -88,7 +88,7 @@ func doMain(ctx context.Context) error {
 				if err != nil {
 					return err
 				}
-				err = mc.RemoveObject(ctx, bucket, obj.Key+"medium.large", minio.RemoveObjectOptions{})
+				err = mc.RemoveObject(ctx, bucket, obj.Key+"large.jpg", minio.RemoveObjectOptions{})
 				if err != nil {
 					return err
 				}
