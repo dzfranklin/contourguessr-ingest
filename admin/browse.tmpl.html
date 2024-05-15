@@ -53,6 +53,10 @@
           padding: 3px;
           border-radius: 3px;
       }
+
+      .badge.ok {
+          background-color: #019801;
+      }
   </style>
 {{ end }}
 
@@ -95,16 +99,32 @@
       <ul class="entries">
           {{ range .Entries }}
             <li>
-              <a href="{{ .LargeSource }}">
+              <a href="/info/{{ .Id }}">
                 <img src="{{ .MediumSource }}" alt="">
               </a>
 
               <div class="footer">
-                  {{ if .HasGPS }}<span class="badge">GPS</span>{{ end }}
+                  {{ if .F.IsOK }}
+                    <span class="badge ok">OK</span>
+                  {{ else }}
+                    <span class="badge">NO</span>
+                  {{ end }}
+
+                  <span class="badge">over_t:
+                    {{ if .F.NoGPSAltitude}}
+                      NO
+                    {{ else }}
+                        {{ sub .F.GPSAltitudeMeters .F.TerrainElevationMeters }}
+                    {{ end}}
+                  </span>
+
+                  <span class="badge">v:{{ .F.ValidityScore | score }}</span>
+
+                  <span class="badge">road:{{ .F.NearestRoadMeters }}</span>
+
                   {{ if eq $.Region "" }}
                     <a href="?r={{ .RegionID }}" class="region-link">{{ .RegionName }}</a>
                   {{ end }}
-                <a href="{{ .OriginalURL }}">Original</a>
               </div>
             </li>
           {{ end }}

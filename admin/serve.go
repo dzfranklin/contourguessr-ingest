@@ -2,6 +2,7 @@ package admin
 
 import (
 	"context"
+	"contourguessr-ingest/repos"
 	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -11,19 +12,21 @@ import (
 	"net/http"
 )
 
+var repo *repos.Repo
 var db *pgxpool.Pool
 var mc *minio.Client
 var mtApiKey string
 
 func Serve(
 	ctx context.Context,
-	pool *pgxpool.Pool,
+	r *repos.Repo,
 	minioClient *minio.Client,
 	maptilerAPIKey string,
 	addr string,
 ) {
 	// Setup globals
-	db = pool
+	repo = r
+	db = repo.Pool()
 	mc = minioClient
 	mtApiKey = maptilerAPIKey
 

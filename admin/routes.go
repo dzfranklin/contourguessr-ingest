@@ -47,6 +47,19 @@ var funcMap = template.FuncMap{
 			return fmt.Sprintf("%.2f GiB", float64(bytes)/1024/1024/1024)
 		}
 	},
+	"score": func(score float64) string {
+		return fmt.Sprintf("%.2f", score)
+	},
+	"prettyJSON": func(v interface{}) string {
+		b, err := json.MarshalIndent(v, "", "  ")
+		if err != nil {
+			return fmt.Sprintf("marshal: %v", err)
+		}
+		return string(b)
+	},
+	"sub": func(a, b int) int {
+		return a - b
+	},
 }
 
 func Mux() http.Handler {
@@ -86,6 +99,7 @@ func Mux() http.Handler {
 	mux.HandleFunc("/storage", storageHandler)
 	mux.HandleFunc("/plot", plotHandler)
 	mux.HandleFunc("/browse", browseHandler)
+	mux.HandleFunc("/info/{id}", infoHandler)
 
 	return timingMiddleware(mux)
 }

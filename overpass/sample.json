@@ -1,0 +1,479 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62 7c32a7d5",
+  "osm3s": {
+    "timestamp_osm_base": "2024-05-14T21:17:00Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+
+    {
+      "type": "node",
+      "id": 176434261,
+      "lat": 40.0203403,
+      "lon": -105.2629233,
+      "tags": {
+        "crossing": "uncontrolled",
+        "highway": "crossing",
+        "source": "Bing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2249470492,
+      "lat": 40.0203176,
+      "lon": -105.2632783,
+      "tags": {
+        "crossing": "uncontrolled",
+        "highway": "crossing",
+        "source": "Bing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4941090678,
+      "lat": 40.0203918,
+      "lon": -105.2631600,
+      "tags": {
+        "button_operated": "yes",
+        "crossing": "zebra",
+        "crossing:island": "yes",
+        "flashing_lights": "yes",
+        "highway": "crossing",
+        "tactile_paving": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4941090679,
+      "lat": 40.0202946,
+      "lon": -105.2631550,
+      "tags": {
+        "button_operated": "yes",
+        "crossing": "zebra",
+        "crossing:island": "yes",
+        "crossing:markings": "zebra",
+        "flashing_lights": "yes",
+        "highway": "crossing",
+        "tactile_paving": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4941090680,
+      "lat": 40.0202572,
+      "lon": -105.2630351,
+      "tags": {
+        "button_operated": "yes",
+        "crossing:island": "yes",
+        "flashing_lights": "yes",
+        "highway": "crossing",
+        "tactile_paving": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4941090681,
+      "lat": 40.0203887,
+      "lon": -105.2630340,
+      "tags": {
+        "button_operated": "yes",
+        "crossing": "zebra",
+        "crossing:island": "yes",
+        "crossing:markings": "zebra",
+        "flashing_lights": "yes",
+        "highway": "crossing",
+        "tactile_paving": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6855877136,
+      "lat": 40.0202926,
+      "lon": -105.2630320,
+      "tags": {
+        "button_operated": "yes",
+        "crossing": "zebra",
+        "crossing:island": "yes",
+        "crossing:markings": "zebra",
+        "flashing_lights": "yes",
+        "highway": "crossing",
+        "tactile_paving": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6855877137,
+      "lat": 40.0202536,
+      "lon": -105.2631512,
+      "tags": {
+        "button_operated": "yes",
+        "crossing:island": "yes",
+        "flashing_lights": "yes",
+        "highway": "crossing",
+        "tactile_paving": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11427792111,
+      "lat": 40.0204257,
+      "lon": -105.2630359,
+      "tags": {
+        "button_operated": "yes",
+        "crossing": "zebra",
+        "crossing:island": "yes",
+        "crossing:markings": "zebra",
+        "flashing_lights": "yes",
+        "highway": "crossing",
+        "tactile_paving": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11427792112,
+      "lat": 40.0204240,
+      "lon": -105.2631610,
+      "tags": {
+        "button_operated": "yes",
+        "crossing": "zebra",
+        "crossing:island": "yes",
+        "crossing:markings": "zebra",
+        "flashing_lights": "yes",
+        "highway": "crossing",
+        "tactile_paving": "no"
+      }
+    },
+    {
+      "type": "way",
+      "id": 17023253,
+      "nodes": [
+        176509572,
+        7675946024,
+        5531008450,
+        176509574,
+        544328205,
+        3716683362
+      ],
+      "tags": {
+        "highway": "residential",
+        "maxspeed": "20 mph",
+        "name": "South Street",
+        "oneway": "no",
+        "source:maxspeed": "City of Boulder Ordinance (June 2020)",
+        "surface": "asphalt",
+        "tiger:county": "Boulder, CO",
+        "tiger:reviewed": "no"
+      }
+    },
+    {
+      "type": "way",
+      "id": 31645294,
+      "nodes": [
+        544328198,
+        2249470492,
+        5531008443,
+        176434259
+      ],
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:both": "lane",
+        "cycleway:both:buffer": "no",
+        "highway": "tertiary",
+        "lanes": "2",
+        "maxspeed": "25 mph",
+        "name": "Walnut Street",
+        "surface": "asphalt"
+      }
+    },
+    {
+      "type": "way",
+      "id": 43313601,
+      "nodes": [
+        544328190,
+        3272108579,
+        11427792112,
+        4941090678,
+        544328198,
+        4941090679,
+        6855877137,
+        544328193,
+        3669255866
+      ],
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:right": "lane",
+        "cycleway:right:buffer": "no",
+        "highway": "secondary",
+        "lanes": "2",
+        "maxspeed": "30 mph",
+        "name": "Folsom Street",
+        "oneway": "yes",
+        "surface": "asphalt"
+      }
+    },
+    {
+      "type": "way",
+      "id": 43313642,
+      "nodes": [
+        544328229,
+        7113564611,
+        176521060,
+        176521062,
+        3716683362,
+        3669255866
+      ],
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:both": "lane",
+        "cycleway:both:buffer": "no",
+        "highway": "secondary",
+        "lanes": "4",
+        "maxspeed": "30 mph",
+        "name": "Folsom Street",
+        "surface": "asphalt"
+      }
+    },
+    {
+      "type": "way",
+      "id": 115575997,
+      "nodes": [
+        4335754261,
+        176434261,
+        3716681500
+      ],
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:both": "lane",
+        "cycleway:both:buffer": "no",
+        "highway": "residential",
+        "lanes": "2",
+        "maxspeed": "25 mph",
+        "name": "Walnut Street",
+        "oneway": "no",
+        "surface": "asphalt",
+        "width": "5"
+      }
+    },
+    {
+      "type": "way",
+      "id": 362660884,
+      "nodes": [
+        3669255866,
+        3669255886,
+        4941090680,
+        6855877136,
+        4335754261,
+        4941090681,
+        11427792111,
+        4058961584
+      ],
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:right": "lane",
+        "cycleway:right:buffer": "no",
+        "highway": "secondary",
+        "lanes": "2",
+        "maxspeed": "30 mph",
+        "name": "Folsom Street",
+        "oneway": "yes",
+        "surface": "asphalt"
+      }
+    },
+    {
+      "type": "way",
+      "id": 367788669,
+      "nodes": [
+        5531008466,
+        3716681499,
+        3716681496,
+        3716681493
+      ],
+      "tags": {
+        "highway": "service",
+        "service": "parking_aisle"
+      }
+    },
+    {
+      "type": "way",
+      "id": 367788670,
+      "nodes": [
+        3716681500,
+        5173927504,
+        3716681498,
+        3716681494
+      ],
+      "tags": {
+        "highway": "service",
+        "service": "parking_aisle"
+      }
+    },
+    {
+      "type": "way",
+      "id": 367788671,
+      "nodes": [
+        3716681498,
+        3716681497,
+        6855877130,
+        3716681495,
+        3716681492
+      ],
+      "tags": {
+        "highway": "service"
+      }
+    },
+    {
+      "type": "way",
+      "id": 367788745,
+      "nodes": [
+        3716681494,
+        3716681492,
+        5681083943,
+        3716683362
+      ],
+      "tags": {
+        "highway": "service",
+        "service": "parking_aisle"
+      }
+    },
+    {
+      "type": "way",
+      "id": 482553801,
+      "nodes": [
+        4753653658,
+        6855877135,
+        4753653666,
+        5173927504
+      ],
+      "tags": {
+        "footway": "sidewalk",
+        "highway": "footway",
+        "lit": "yes"
+      }
+    },
+    {
+      "type": "way",
+      "id": 482553802,
+      "nodes": [
+        4753653658,
+        4753653667,
+        5681083943,
+        4753653668
+      ],
+      "tags": {
+        "footway": "sidewalk",
+        "highway": "footway",
+        "lit": "yes"
+      }
+    },
+    {
+      "type": "way",
+      "id": 503861109,
+      "nodes": [
+        2249470492,
+        6855877138,
+        4941090678,
+        4941090681,
+        6855877133,
+        176434261
+      ],
+      "tags": {
+        "bicycle": "designated",
+        "crossing": "traffic_signals",
+        "crossing:island": "yes",
+        "foot": "designated",
+        "highway": "path",
+        "lit": "yes"
+      }
+    },
+    {
+      "type": "way",
+      "id": 503861110,
+      "nodes": [
+        176434261,
+        4753653658,
+        4941090680,
+        6855877137,
+        4753653651,
+        2249470492
+      ],
+      "tags": {
+        "crossing": "zebra",
+        "crossing:markings": "zebra",
+        "footway": "crossing",
+        "highway": "footway",
+        "lit": "yes"
+      }
+    },
+    {
+      "type": "way",
+      "id": 503861306,
+      "nodes": [
+        2249470492,
+        4941090679,
+        6855877136,
+        6855877132,
+        176434261
+      ],
+      "tags": {
+        "bicycle": "designated",
+        "crossing": "traffic_signals",
+        "crossing:island": "yes",
+        "foot": "designated",
+        "highway": "path",
+        "lit": "yes"
+      }
+    },
+    {
+      "type": "way",
+      "id": 504442400,
+      "nodes": [
+        3716681500,
+        176434262,
+        544328249,
+        544328250,
+        544328251,
+        3716681499,
+        7113564628,
+        588236311,
+        5531008507,
+        176434266,
+        176434268,
+        176434270
+      ],
+      "tags": {
+        "bicycle": "designated",
+        "cycleway:both": "lane",
+        "cycleway:both:buffer": "no",
+        "highway": "residential",
+        "lanes": "2",
+        "maxspeed": "25 mph",
+        "name": "Walnut Street",
+        "oneway": "no",
+        "parking:lane:left": "parallel",
+        "surface": "asphalt",
+        "width": "5"
+      }
+    },
+    {
+      "type": "way",
+      "id": 1232058520,
+      "nodes": [
+        2249470492,
+        11427792109,
+        11427792112,
+        11427792111,
+        11427792110,
+        176434261
+      ],
+      "tags": {
+        "crossing": "zebra",
+        "crossing:markings": "zebra",
+        "footway": "crossing",
+        "highway": "footway",
+        "lit": "yes"
+      }
+    }
+
+  ]
+}

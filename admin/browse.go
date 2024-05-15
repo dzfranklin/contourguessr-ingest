@@ -2,6 +2,7 @@ package admin
 
 import (
 	"context"
+	"contourguessr-ingest/repos"
 	"github.com/jackc/pgx/v5"
 	"math"
 	"net/http"
@@ -96,8 +97,8 @@ type browseEntry struct {
 	RegionName   string
 	MediumSource string
 	LargeSource  string
-	HasGPS       bool
 	OriginalURL  string
+	F            repos.Features
 }
 
 const perPage = 100
@@ -107,8 +108,7 @@ func loadBrowsePage(ctx context.Context, regionId *int, pageNum int) (bool, []br
 	var err error
 	if regionId == nil {
 		rows, err = db.Query(ctx, `
-			SELECT f.id, r.id, r.name, f.medium->>'source', f.large->>'source', f.info->'owner'->>'nsid',
-				   coalesce(f.exif@>'[{"tag": "GPSLatitude"}]'::jsonb and f.exif@>'[{"tag": "GPSLongitude"}]'::jsonb, false)
+			SELECT f.id, r.id, r.name, f.medium->>'source', f.large->>'source', f.info->'owner'->>'nsid'
 			FROM flickr f
 			JOIN regions r ON f.region_id = r.id
 			ORDER BY f.inserted_at DESC
@@ -116,8 +116,7 @@ func loadBrowsePage(ctx context.Context, regionId *int, pageNum int) (bool, []br
 	`, perPage, (pageNum-1)*perPage)
 	} else {
 		rows, err = db.Query(ctx, `
-			SELECT f.id, r.id, r.name, f.medium->>'source', f.large->>'source', f.info->'owner'->>'nsid',
-				   coalesce(f.exif@>'[{"tag": "GPSLatitude"}]'::jsonb and f.exif@>'[{"tag": "GPSLongitude"}]'::jsonb, false)
+			SELECT f.id, r.id, r.name, f.medium->>'source', f.large->>'source', f.info->'owner'->>'nsid'
 			FROM flickr f
 			JOIN regions r ON f.region_id = r.id
 			WHERE f.region_id = $1
@@ -130,16 +129,31 @@ func loadBrowsePage(ctx context.Context, regionId *int, pageNum int) (bool, []br
 	}
 	defer rows.Close()
 
+	var ids []string
 	var entries []browseEntry
 	for rows.Next() {
 		var entry browseEntry
 		var owner string
-		err = rows.Scan(&entry.Id, &entry.RegionID, &entry.RegionName, &entry.MediumSource, &entry.LargeSource, &owner, &entry.HasGPS)
+		err = rows.Scan(&entry.Id, &entry.RegionID, &entry.RegionName, &entry.MediumSource, &entry.LargeSource, &owner)
 		if err != nil {
 			return false, nil, err
 		}
 		entry.OriginalURL = "https://www.flickr.com/photos/" + owner + "/" + entry.Id
 		entries = append(entries, entry)
+		ids = append(ids, entry.Id)
+	}
+
+	allFeatures, err := repo.GetFeaturesIn(ctx, ids)
+	if err != nil {
+		return false, nil, err
+	}
+	allFeaturesMap := make(map[string]repos.Features)
+	for _, feat := range allFeatures {
+		allFeaturesMap[feat.PhotoId] = feat
+	}
+	for i, entry := range entries {
+		entry.F = allFeaturesMap[entry.Id]
+		entries[i] = entry
 	}
 
 	return len(entries) == perPage, entries, nil

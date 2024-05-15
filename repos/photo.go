@@ -3,13 +3,16 @@ package repos
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"github.com/jackc/pgx/v5"
+	"strconv"
 	"time"
 )
 
 type Photo struct {
 	Id         string          `json:"id"`
-	RegionId   int             `json:"region_id"`
-	InsertedAt *time.Time      `json:"inserted_at"`
+	RegionId   int             `json:"region_id" db:"region_id"`
+	InsertedAt *time.Time      `json:"inserted_at" db:"inserted_at"`
 	Info       json.RawMessage `json:"info"`
 	Sizes      json.RawMessage `json:"sizes"`
 	Exif       json.RawMessage `json:"exif"`
@@ -25,14 +28,44 @@ type PhotoSize struct {
 }
 
 func (r *Repo) GetPhoto(ctx context.Context, id string) (*Photo, error) {
-	var photo Photo
-	err := r.db.QueryRow(ctx, `
-		SELECT id, region_id, inserted_at, info, sizes, exif, medium, large
+	rows, err := r.db.Query(ctx, `
+		SELECT *
 		FROM flickr
 		WHERE id = $1
-	`, id).Scan(&photo.Id, &photo.RegionId, &photo.InsertedAt, &photo.Info, &photo.Sizes, &photo.Exif, &photo.Medium, &photo.Large)
+	`, id)
 	if err != nil {
 		return nil, err
 	}
-	return &photo, nil
+	defer rows.Close()
+	return pgx.CollectExactlyOneRow(rows, pgx.RowToAddrOfStructByName[Photo])
+}
+
+func (p Photo) ParseLngLat() (float64, float64, error) {
+	var info struct {
+		Location struct {
+			Latitude  string
+			Longitude string
+		}
+	}
+	if err := json.Unmarshal(p.Info, &info); err != nil {
+		return 0, 0, err
+	}
+
+	lng, err := strconv.ParseFloat(info.Location.Longitude, 64)
+	if err != nil {
+		return 0, 0, fmt.Errorf("parse longitude: %w", err)
+	}
+
+	lat, err := strconv.ParseFloat(info.Location.Latitude, 64)
+	if err != nil {
+		return 0, 0, fmt.Errorf("parse latitude: %w", err)
+	}
+
+	return lng, lat, nil
+}
+
+func (p Photo) ParseExif() (Exif, error) {
+	var out Exif
+	err := json.Unmarshal(p.Exif, &out)
+	return out, err
 }

@@ -1,6 +1,17 @@
 {{ define "title" }}Overview{{ end }}
 
 {{ define "content" }}
+  <table class="kv">
+    <tbody>
+    <tr>
+      <td>Total count</td>
+      <td>{{ .TotalCount }}</td>
+    </tr>
+    </tbody>
+  </table>
+
+  <br>
+
   <table>
     <thead>
     <tr>

@@ -246,7 +246,11 @@ func downloadSizes(ctx context.Context, fc Flickr, mc MinIO, photos []repos.Phot
 
 	sem := make(chan struct{}, maxConcurrentPhotoDownloads)
 	for i := range photos {
-		sem <- struct{}{}
+		select {
+		case sem <- struct{}{}:
+		case <-ctx.Done():
+			return ctx.Err()
+		}
 		go func(i int) {
 			defer func() { <-sem }()
 			id := photos[i].Id

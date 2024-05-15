@@ -55,54 +55,6 @@ func TestStep(t *testing.T) {
 				}`),
 				nil,
 			).expectCall(
-				"flickr.photos.getInfo",
-				map[string]string{"photo_id": "34742333", "extras": "sizes"},
-				[]byte(`{
-				  "photo": {
-					"id": "34742333",
-					"sizes": {
-					  "size": [
-						{
-						  "label": "Square",
-						  "width": 75,
-						  "height": 75,
-						  "source": "https://fake/square.jpg",
-						  "media": "photo"
-						},
-						{
-						  "label": "Thumbnail",
-						  "width": 100,
-						  "height": 80,
-						  "source": "https://fake/thumbnail.jpg",
-						  "media": "photo"
-						},
-						{
-						  "label": "Medium",
-						  "width": 500,
-						  "height": 400,
-						  "source": "https://fake/medium.jpg",
-						  "media": "photo"
-						},
-						{
-						  "label": "Large",
-						  "width": 1024,
-						  "height": 819,
-						  "source": "https://fake/large.jpg",
-						  "media": "photo"
-						},
-						{
-						  "label": "Original",
-						  "width": 1280,
-						  "height": 1024,
-						  "source": "https://fake/original.jpg",
-						  "media": "photo"
-						}
-					  ]
-					}
-				  }
-				}`),
-				nil,
-			).expectCall(
 				"flickr.photos.getExif",
 				map[string]string{"photo_id": "34742333"},
 				[]byte(`{

@@ -13,7 +13,13 @@ func overviewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	totalCount := 0
+	for _, count := range ingestCounts {
+		totalCount += count.Count
+	}
+
 	templateResponse(w, r, "overview.tmpl.html", M{
+		"TotalCount":   totalCount,
 		"IngestCounts": ingestCounts,
 	})
 }

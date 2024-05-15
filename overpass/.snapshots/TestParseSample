@@ -1,0 +1,842 @@
+(*overpass.Response)({
+  Generator: (string) (len=28) "Overpass API 0.7.62 7c32a7d5",
+  Count: (int) 27,
+  Nodes: (map[int64]*overpass.Node) (len=10) {
+    (int64) 176434261: (*overpass.Node)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 176434261,
+        Tags: (map[string]string) (len=3) {
+          (string) (len=8) "crossing": (string) (len=12) "uncontrolled",
+          (string) (len=7) "highway": (string) (len=8) "crossing",
+          (string) (len=6) "source": (string) (len=4) "Bing"
+        }
+      },
+      Lon: (float64) -105.2629233,
+      Lat: (float64) 40.0203403
+    }),
+    (int64) 2249470492: (*overpass.Node)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 2249470492,
+        Tags: (map[string]string) (len=3) {
+          (string) (len=8) "crossing": (string) (len=12) "uncontrolled",
+          (string) (len=7) "highway": (string) (len=8) "crossing",
+          (string) (len=6) "source": (string) (len=4) "Bing"
+        }
+      },
+      Lon: (float64) -105.2632783,
+      Lat: (float64) 40.0203176
+    }),
+    (int64) 4941090678: (*overpass.Node)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 4941090678,
+        Tags: (map[string]string) (len=6) {
+          (string) (len=15) "button_operated": (string) (len=3) "yes",
+          (string) (len=8) "crossing": (string) (len=5) "zebra",
+          (string) (len=15) "crossing:island": (string) (len=3) "yes",
+          (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+          (string) (len=7) "highway": (string) (len=8) "crossing",
+          (string) (len=14) "tactile_paving": (string) (len=2) "no"
+        }
+      },
+      Lon: (float64) -105.26316,
+      Lat: (float64) 40.0203918
+    }),
+    (int64) 4941090679: (*overpass.Node)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 4941090679,
+        Tags: (map[string]string) (len=7) {
+          (string) (len=15) "button_operated": (string) (len=3) "yes",
+          (string) (len=8) "crossing": (string) (len=5) "zebra",
+          (string) (len=15) "crossing:island": (string) (len=3) "yes",
+          (string) (len=17) "crossing:markings": (string) (len=5) "zebra",
+          (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+          (string) (len=7) "highway": (string) (len=8) "crossing",
+          (string) (len=14) "tactile_paving": (string) (len=2) "no"
+        }
+      },
+      Lon: (float64) -105.263155,
+      Lat: (float64) 40.0202946
+    }),
+    (int64) 4941090680: (*overpass.Node)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 4941090680,
+        Tags: (map[string]string) (len=5) {
+          (string) (len=15) "button_operated": (string) (len=3) "yes",
+          (string) (len=15) "crossing:island": (string) (len=3) "yes",
+          (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+          (string) (len=7) "highway": (string) (len=8) "crossing",
+          (string) (len=14) "tactile_paving": (string) (len=2) "no"
+        }
+      },
+      Lon: (float64) -105.2630351,
+      Lat: (float64) 40.0202572
+    }),
+    (int64) 4941090681: (*overpass.Node)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 4941090681,
+        Tags: (map[string]string) (len=7) {
+          (string) (len=15) "button_operated": (string) (len=3) "yes",
+          (string) (len=8) "crossing": (string) (len=5) "zebra",
+          (string) (len=15) "crossing:island": (string) (len=3) "yes",
+          (string) (len=17) "crossing:markings": (string) (len=5) "zebra",
+          (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+          (string) (len=7) "highway": (string) (len=8) "crossing",
+          (string) (len=14) "tactile_paving": (string) (len=2) "no"
+        }
+      },
+      Lon: (float64) -105.263034,
+      Lat: (float64) 40.0203887
+    }),
+    (int64) 6855877136: (*overpass.Node)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 6855877136,
+        Tags: (map[string]string) (len=7) {
+          (string) (len=15) "button_operated": (string) (len=3) "yes",
+          (string) (len=8) "crossing": (string) (len=5) "zebra",
+          (string) (len=15) "crossing:island": (string) (len=3) "yes",
+          (string) (len=17) "crossing:markings": (string) (len=5) "zebra",
+          (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+          (string) (len=7) "highway": (string) (len=8) "crossing",
+          (string) (len=14) "tactile_paving": (string) (len=2) "no"
+        }
+      },
+      Lon: (float64) -105.263032,
+      Lat: (float64) 40.0202926
+    }),
+    (int64) 6855877137: (*overpass.Node)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 6855877137,
+        Tags: (map[string]string) (len=5) {
+          (string) (len=15) "button_operated": (string) (len=3) "yes",
+          (string) (len=15) "crossing:island": (string) (len=3) "yes",
+          (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+          (string) (len=7) "highway": (string) (len=8) "crossing",
+          (string) (len=14) "tactile_paving": (string) (len=2) "no"
+        }
+      },
+      Lon: (float64) -105.2631512,
+      Lat: (float64) 40.0202536
+    }),
+    (int64) 11427792111: (*overpass.Node)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 11427792111,
+        Tags: (map[string]string) (len=7) {
+          (string) (len=15) "button_operated": (string) (len=3) "yes",
+          (string) (len=8) "crossing": (string) (len=5) "zebra",
+          (string) (len=15) "crossing:island": (string) (len=3) "yes",
+          (string) (len=17) "crossing:markings": (string) (len=5) "zebra",
+          (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+          (string) (len=7) "highway": (string) (len=8) "crossing",
+          (string) (len=14) "tactile_paving": (string) (len=2) "no"
+        }
+      },
+      Lon: (float64) -105.2630359,
+      Lat: (float64) 40.0204257
+    }),
+    (int64) 11427792112: (*overpass.Node)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 11427792112,
+        Tags: (map[string]string) (len=7) {
+          (string) (len=15) "button_operated": (string) (len=3) "yes",
+          (string) (len=8) "crossing": (string) (len=5) "zebra",
+          (string) (len=15) "crossing:island": (string) (len=3) "yes",
+          (string) (len=17) "crossing:markings": (string) (len=5) "zebra",
+          (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+          (string) (len=7) "highway": (string) (len=8) "crossing",
+          (string) (len=14) "tactile_paving": (string) (len=2) "no"
+        }
+      },
+      Lon: (float64) -105.263161,
+      Lat: (float64) 40.020424
+    })
+  },
+  Ways: (map[int64]*overpass.Way) (len=17) {
+    (int64) 17023253: (*overpass.Way)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 17023253,
+        Tags: (map[string]string) (len=8) {
+          (string) (len=7) "highway": (string) (len=11) "residential",
+          (string) (len=8) "maxspeed": (string) (len=6) "20 mph",
+          (string) (len=4) "name": (string) (len=12) "South Street",
+          (string) (len=6) "oneway": (string) (len=2) "no",
+          (string) (len=15) "source:maxspeed": (string) (len=37) "City of Boulder Ordinance (June 2020)",
+          (string) (len=7) "surface": (string) (len=7) "asphalt",
+          (string) (len=12) "tiger:county": (string) (len=11) "Boulder, CO",
+          (string) (len=14) "tiger:reviewed": (string) (len=2) "no"
+        }
+      },
+      Nodes: ([]*overpass.Node) (len=6) {
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>)
+      }
+    }),
+    (int64) 31645294: (*overpass.Way)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 31645294,
+        Tags: (map[string]string) (len=8) {
+          (string) (len=7) "bicycle": (string) (len=10) "designated",
+          (string) (len=13) "cycleway:both": (string) (len=4) "lane",
+          (string) (len=20) "cycleway:both:buffer": (string) (len=2) "no",
+          (string) (len=7) "highway": (string) (len=8) "tertiary",
+          (string) (len=5) "lanes": (string) (len=1) "2",
+          (string) (len=8) "maxspeed": (string) (len=6) "25 mph",
+          (string) (len=4) "name": (string) (len=13) "Walnut Street",
+          (string) (len=7) "surface": (string) (len=7) "asphalt"
+        }
+      },
+      Nodes: ([]*overpass.Node) (len=4) {
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 2249470492,
+            Tags: (map[string]string) (len=3) {
+              (string) (len=8) "crossing": (string) (len=12) "uncontrolled",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=6) "source": (string) (len=4) "Bing"
+            }
+          },
+          Lon: (float64) -105.2632783,
+          Lat: (float64) 40.0203176
+        }),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>)
+      }
+    }),
+    (int64) 43313601: (*overpass.Way)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 43313601,
+        Tags: (map[string]string) (len=9) {
+          (string) (len=7) "bicycle": (string) (len=10) "designated",
+          (string) (len=14) "cycleway:right": (string) (len=4) "lane",
+          (string) (len=21) "cycleway:right:buffer": (string) (len=2) "no",
+          (string) (len=7) "highway": (string) (len=9) "secondary",
+          (string) (len=5) "lanes": (string) (len=1) "2",
+          (string) (len=8) "maxspeed": (string) (len=6) "30 mph",
+          (string) (len=4) "name": (string) (len=13) "Folsom Street",
+          (string) (len=6) "oneway": (string) (len=3) "yes",
+          (string) (len=7) "surface": (string) (len=7) "asphalt"
+        }
+      },
+      Nodes: ([]*overpass.Node) (len=9) {
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 11427792112,
+            Tags: (map[string]string) (len=7) {
+              (string) (len=15) "button_operated": (string) (len=3) "yes",
+              (string) (len=8) "crossing": (string) (len=5) "zebra",
+              (string) (len=15) "crossing:island": (string) (len=3) "yes",
+              (string) (len=17) "crossing:markings": (string) (len=5) "zebra",
+              (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=14) "tactile_paving": (string) (len=2) "no"
+            }
+          },
+          Lon: (float64) -105.263161,
+          Lat: (float64) 40.020424
+        }),
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 4941090678,
+            Tags: (map[string]string) (len=6) {
+              (string) (len=15) "button_operated": (string) (len=3) "yes",
+              (string) (len=8) "crossing": (string) (len=5) "zebra",
+              (string) (len=15) "crossing:island": (string) (len=3) "yes",
+              (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=14) "tactile_paving": (string) (len=2) "no"
+            }
+          },
+          Lon: (float64) -105.26316,
+          Lat: (float64) 40.0203918
+        }),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 4941090679,
+            Tags: (map[string]string) (len=7) {
+              (string) (len=15) "button_operated": (string) (len=3) "yes",
+              (string) (len=8) "crossing": (string) (len=5) "zebra",
+              (string) (len=15) "crossing:island": (string) (len=3) "yes",
+              (string) (len=17) "crossing:markings": (string) (len=5) "zebra",
+              (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=14) "tactile_paving": (string) (len=2) "no"
+            }
+          },
+          Lon: (float64) -105.263155,
+          Lat: (float64) 40.0202946
+        }),
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 6855877137,
+            Tags: (map[string]string) (len=5) {
+              (string) (len=15) "button_operated": (string) (len=3) "yes",
+              (string) (len=15) "crossing:island": (string) (len=3) "yes",
+              (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=14) "tactile_paving": (string) (len=2) "no"
+            }
+          },
+          Lon: (float64) -105.2631512,
+          Lat: (float64) 40.0202536
+        }),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>)
+      }
+    }),
+    (int64) 43313642: (*overpass.Way)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 43313642,
+        Tags: (map[string]string) (len=8) {
+          (string) (len=7) "bicycle": (string) (len=10) "designated",
+          (string) (len=13) "cycleway:both": (string) (len=4) "lane",
+          (string) (len=20) "cycleway:both:buffer": (string) (len=2) "no",
+          (string) (len=7) "highway": (string) (len=9) "secondary",
+          (string) (len=5) "lanes": (string) (len=1) "4",
+          (string) (len=8) "maxspeed": (string) (len=6) "30 mph",
+          (string) (len=4) "name": (string) (len=13) "Folsom Street",
+          (string) (len=7) "surface": (string) (len=7) "asphalt"
+        }
+      },
+      Nodes: ([]*overpass.Node) (len=6) {
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>)
+      }
+    }),
+    (int64) 115575997: (*overpass.Way)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 115575997,
+        Tags: (map[string]string) (len=10) {
+          (string) (len=7) "bicycle": (string) (len=10) "designated",
+          (string) (len=13) "cycleway:both": (string) (len=4) "lane",
+          (string) (len=20) "cycleway:both:buffer": (string) (len=2) "no",
+          (string) (len=7) "highway": (string) (len=11) "residential",
+          (string) (len=5) "lanes": (string) (len=1) "2",
+          (string) (len=8) "maxspeed": (string) (len=6) "25 mph",
+          (string) (len=4) "name": (string) (len=13) "Walnut Street",
+          (string) (len=6) "oneway": (string) (len=2) "no",
+          (string) (len=7) "surface": (string) (len=7) "asphalt",
+          (string) (len=5) "width": (string) (len=1) "5"
+        }
+      },
+      Nodes: ([]*overpass.Node) (len=3) {
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 176434261,
+            Tags: (map[string]string) (len=3) {
+              (string) (len=8) "crossing": (string) (len=12) "uncontrolled",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=6) "source": (string) (len=4) "Bing"
+            }
+          },
+          Lon: (float64) -105.2629233,
+          Lat: (float64) 40.0203403
+        }),
+        (*overpass.Node)(<nil>)
+      }
+    }),
+    (int64) 362660884: (*overpass.Way)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 362660884,
+        Tags: (map[string]string) (len=9) {
+          (string) (len=7) "bicycle": (string) (len=10) "designated",
+          (string) (len=14) "cycleway:right": (string) (len=4) "lane",
+          (string) (len=21) "cycleway:right:buffer": (string) (len=2) "no",
+          (string) (len=7) "highway": (string) (len=9) "secondary",
+          (string) (len=5) "lanes": (string) (len=1) "2",
+          (string) (len=8) "maxspeed": (string) (len=6) "30 mph",
+          (string) (len=4) "name": (string) (len=13) "Folsom Street",
+          (string) (len=6) "oneway": (string) (len=3) "yes",
+          (string) (len=7) "surface": (string) (len=7) "asphalt"
+        }
+      },
+      Nodes: ([]*overpass.Node) (len=8) {
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 4941090680,
+            Tags: (map[string]string) (len=5) {
+              (string) (len=15) "button_operated": (string) (len=3) "yes",
+              (string) (len=15) "crossing:island": (string) (len=3) "yes",
+              (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=14) "tactile_paving": (string) (len=2) "no"
+            }
+          },
+          Lon: (float64) -105.2630351,
+          Lat: (float64) 40.0202572
+        }),
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 6855877136,
+            Tags: (map[string]string) (len=7) {
+              (string) (len=15) "button_operated": (string) (len=3) "yes",
+              (string) (len=8) "crossing": (string) (len=5) "zebra",
+              (string) (len=15) "crossing:island": (string) (len=3) "yes",
+              (string) (len=17) "crossing:markings": (string) (len=5) "zebra",
+              (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=14) "tactile_paving": (string) (len=2) "no"
+            }
+          },
+          Lon: (float64) -105.263032,
+          Lat: (float64) 40.0202926
+        }),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 4941090681,
+            Tags: (map[string]string) (len=7) {
+              (string) (len=15) "button_operated": (string) (len=3) "yes",
+              (string) (len=8) "crossing": (string) (len=5) "zebra",
+              (string) (len=15) "crossing:island": (string) (len=3) "yes",
+              (string) (len=17) "crossing:markings": (string) (len=5) "zebra",
+              (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=14) "tactile_paving": (string) (len=2) "no"
+            }
+          },
+          Lon: (float64) -105.263034,
+          Lat: (float64) 40.0203887
+        }),
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 11427792111,
+            Tags: (map[string]string) (len=7) {
+              (string) (len=15) "button_operated": (string) (len=3) "yes",
+              (string) (len=8) "crossing": (string) (len=5) "zebra",
+              (string) (len=15) "crossing:island": (string) (len=3) "yes",
+              (string) (len=17) "crossing:markings": (string) (len=5) "zebra",
+              (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=14) "tactile_paving": (string) (len=2) "no"
+            }
+          },
+          Lon: (float64) -105.2630359,
+          Lat: (float64) 40.0204257
+        }),
+        (*overpass.Node)(<nil>)
+      }
+    }),
+    (int64) 367788669: (*overpass.Way)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 367788669,
+        Tags: (map[string]string) (len=2) {
+          (string) (len=7) "highway": (string) (len=7) "service",
+          (string) (len=7) "service": (string) (len=13) "parking_aisle"
+        }
+      },
+      Nodes: ([]*overpass.Node) (len=4) {
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>)
+      }
+    }),
+    (int64) 367788670: (*overpass.Way)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 367788670,
+        Tags: (map[string]string) (len=2) {
+          (string) (len=7) "highway": (string) (len=7) "service",
+          (string) (len=7) "service": (string) (len=13) "parking_aisle"
+        }
+      },
+      Nodes: ([]*overpass.Node) (len=4) {
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>)
+      }
+    }),
+    (int64) 367788671: (*overpass.Way)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 367788671,
+        Tags: (map[string]string) (len=1) {
+          (string) (len=7) "highway": (string) (len=7) "service"
+        }
+      },
+      Nodes: ([]*overpass.Node) (len=5) {
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>)
+      }
+    }),
+    (int64) 367788745: (*overpass.Way)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 367788745,
+        Tags: (map[string]string) (len=2) {
+          (string) (len=7) "highway": (string) (len=7) "service",
+          (string) (len=7) "service": (string) (len=13) "parking_aisle"
+        }
+      },
+      Nodes: ([]*overpass.Node) (len=4) {
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>)
+      }
+    }),
+    (int64) 482553801: (*overpass.Way)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 482553801,
+        Tags: (map[string]string) (len=3) {
+          (string) (len=7) "footway": (string) (len=8) "sidewalk",
+          (string) (len=7) "highway": (string) (len=7) "footway",
+          (string) (len=3) "lit": (string) (len=3) "yes"
+        }
+      },
+      Nodes: ([]*overpass.Node) (len=4) {
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>)
+      }
+    }),
+    (int64) 482553802: (*overpass.Way)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 482553802,
+        Tags: (map[string]string) (len=3) {
+          (string) (len=7) "footway": (string) (len=8) "sidewalk",
+          (string) (len=7) "highway": (string) (len=7) "footway",
+          (string) (len=3) "lit": (string) (len=3) "yes"
+        }
+      },
+      Nodes: ([]*overpass.Node) (len=4) {
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>)
+      }
+    }),
+    (int64) 503861109: (*overpass.Way)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 503861109,
+        Tags: (map[string]string) (len=6) {
+          (string) (len=7) "bicycle": (string) (len=10) "designated",
+          (string) (len=8) "crossing": (string) (len=15) "traffic_signals",
+          (string) (len=15) "crossing:island": (string) (len=3) "yes",
+          (string) (len=4) "foot": (string) (len=10) "designated",
+          (string) (len=7) "highway": (string) (len=4) "path",
+          (string) (len=3) "lit": (string) (len=3) "yes"
+        }
+      },
+      Nodes: ([]*overpass.Node) (len=6) {
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 2249470492,
+            Tags: (map[string]string) (len=3) {
+              (string) (len=8) "crossing": (string) (len=12) "uncontrolled",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=6) "source": (string) (len=4) "Bing"
+            }
+          },
+          Lon: (float64) -105.2632783,
+          Lat: (float64) 40.0203176
+        }),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 4941090678,
+            Tags: (map[string]string) (len=6) {
+              (string) (len=15) "button_operated": (string) (len=3) "yes",
+              (string) (len=8) "crossing": (string) (len=5) "zebra",
+              (string) (len=15) "crossing:island": (string) (len=3) "yes",
+              (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=14) "tactile_paving": (string) (len=2) "no"
+            }
+          },
+          Lon: (float64) -105.26316,
+          Lat: (float64) 40.0203918
+        }),
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 4941090681,
+            Tags: (map[string]string) (len=7) {
+              (string) (len=15) "button_operated": (string) (len=3) "yes",
+              (string) (len=8) "crossing": (string) (len=5) "zebra",
+              (string) (len=15) "crossing:island": (string) (len=3) "yes",
+              (string) (len=17) "crossing:markings": (string) (len=5) "zebra",
+              (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=14) "tactile_paving": (string) (len=2) "no"
+            }
+          },
+          Lon: (float64) -105.263034,
+          Lat: (float64) 40.0203887
+        }),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 176434261,
+            Tags: (map[string]string) (len=3) {
+              (string) (len=8) "crossing": (string) (len=12) "uncontrolled",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=6) "source": (string) (len=4) "Bing"
+            }
+          },
+          Lon: (float64) -105.2629233,
+          Lat: (float64) 40.0203403
+        })
+      }
+    }),
+    (int64) 503861110: (*overpass.Way)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 503861110,
+        Tags: (map[string]string) (len=5) {
+          (string) (len=8) "crossing": (string) (len=5) "zebra",
+          (string) (len=17) "crossing:markings": (string) (len=5) "zebra",
+          (string) (len=7) "footway": (string) (len=8) "crossing",
+          (string) (len=7) "highway": (string) (len=7) "footway",
+          (string) (len=3) "lit": (string) (len=3) "yes"
+        }
+      },
+      Nodes: ([]*overpass.Node) (len=6) {
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 176434261,
+            Tags: (map[string]string) (len=3) {
+              (string) (len=8) "crossing": (string) (len=12) "uncontrolled",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=6) "source": (string) (len=4) "Bing"
+            }
+          },
+          Lon: (float64) -105.2629233,
+          Lat: (float64) 40.0203403
+        }),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 4941090680,
+            Tags: (map[string]string) (len=5) {
+              (string) (len=15) "button_operated": (string) (len=3) "yes",
+              (string) (len=15) "crossing:island": (string) (len=3) "yes",
+              (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=14) "tactile_paving": (string) (len=2) "no"
+            }
+          },
+          Lon: (float64) -105.2630351,
+          Lat: (float64) 40.0202572
+        }),
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 6855877137,
+            Tags: (map[string]string) (len=5) {
+              (string) (len=15) "button_operated": (string) (len=3) "yes",
+              (string) (len=15) "crossing:island": (string) (len=3) "yes",
+              (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=14) "tactile_paving": (string) (len=2) "no"
+            }
+          },
+          Lon: (float64) -105.2631512,
+          Lat: (float64) 40.0202536
+        }),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 2249470492,
+            Tags: (map[string]string) (len=3) {
+              (string) (len=8) "crossing": (string) (len=12) "uncontrolled",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=6) "source": (string) (len=4) "Bing"
+            }
+          },
+          Lon: (float64) -105.2632783,
+          Lat: (float64) 40.0203176
+        })
+      }
+    }),
+    (int64) 503861306: (*overpass.Way)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 503861306,
+        Tags: (map[string]string) (len=6) {
+          (string) (len=7) "bicycle": (string) (len=10) "designated",
+          (string) (len=8) "crossing": (string) (len=15) "traffic_signals",
+          (string) (len=15) "crossing:island": (string) (len=3) "yes",
+          (string) (len=4) "foot": (string) (len=10) "designated",
+          (string) (len=7) "highway": (string) (len=4) "path",
+          (string) (len=3) "lit": (string) (len=3) "yes"
+        }
+      },
+      Nodes: ([]*overpass.Node) (len=5) {
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 2249470492,
+            Tags: (map[string]string) (len=3) {
+              (string) (len=8) "crossing": (string) (len=12) "uncontrolled",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=6) "source": (string) (len=4) "Bing"
+            }
+          },
+          Lon: (float64) -105.2632783,
+          Lat: (float64) 40.0203176
+        }),
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 4941090679,
+            Tags: (map[string]string) (len=7) {
+              (string) (len=15) "button_operated": (string) (len=3) "yes",
+              (string) (len=8) "crossing": (string) (len=5) "zebra",
+              (string) (len=15) "crossing:island": (string) (len=3) "yes",
+              (string) (len=17) "crossing:markings": (string) (len=5) "zebra",
+              (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=14) "tactile_paving": (string) (len=2) "no"
+            }
+          },
+          Lon: (float64) -105.263155,
+          Lat: (float64) 40.0202946
+        }),
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 6855877136,
+            Tags: (map[string]string) (len=7) {
+              (string) (len=15) "button_operated": (string) (len=3) "yes",
+              (string) (len=8) "crossing": (string) (len=5) "zebra",
+              (string) (len=15) "crossing:island": (string) (len=3) "yes",
+              (string) (len=17) "crossing:markings": (string) (len=5) "zebra",
+              (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=14) "tactile_paving": (string) (len=2) "no"
+            }
+          },
+          Lon: (float64) -105.263032,
+          Lat: (float64) 40.0202926
+        }),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 176434261,
+            Tags: (map[string]string) (len=3) {
+              (string) (len=8) "crossing": (string) (len=12) "uncontrolled",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=6) "source": (string) (len=4) "Bing"
+            }
+          },
+          Lon: (float64) -105.2629233,
+          Lat: (float64) 40.0203403
+        })
+      }
+    }),
+    (int64) 504442400: (*overpass.Way)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 504442400,
+        Tags: (map[string]string) (len=11) {
+          (string) (len=7) "bicycle": (string) (len=10) "designated",
+          (string) (len=13) "cycleway:both": (string) (len=4) "lane",
+          (string) (len=20) "cycleway:both:buffer": (string) (len=2) "no",
+          (string) (len=7) "highway": (string) (len=11) "residential",
+          (string) (len=5) "lanes": (string) (len=1) "2",
+          (string) (len=8) "maxspeed": (string) (len=6) "25 mph",
+          (string) (len=4) "name": (string) (len=13) "Walnut Street",
+          (string) (len=6) "oneway": (string) (len=2) "no",
+          (string) (len=17) "parking:lane:left": (string) (len=8) "parallel",
+          (string) (len=7) "surface": (string) (len=7) "asphalt",
+          (string) (len=5) "width": (string) (len=1) "5"
+        }
+      },
+      Nodes: ([]*overpass.Node) (len=12) {
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)(<nil>)
+      }
+    }),
+    (int64) 1232058520: (*overpass.Way)({
+      Meta: (overpass.Meta) {
+        ID: (int64) 1232058520,
+        Tags: (map[string]string) (len=5) {
+          (string) (len=8) "crossing": (string) (len=5) "zebra",
+          (string) (len=17) "crossing:markings": (string) (len=5) "zebra",
+          (string) (len=7) "footway": (string) (len=8) "crossing",
+          (string) (len=7) "highway": (string) (len=7) "footway",
+          (string) (len=3) "lit": (string) (len=3) "yes"
+        }
+      },
+      Nodes: ([]*overpass.Node) (len=6) {
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 2249470492,
+            Tags: (map[string]string) (len=3) {
+              (string) (len=8) "crossing": (string) (len=12) "uncontrolled",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=6) "source": (string) (len=4) "Bing"
+            }
+          },
+          Lon: (float64) -105.2632783,
+          Lat: (float64) 40.0203176
+        }),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 11427792112,
+            Tags: (map[string]string) (len=7) {
+              (string) (len=15) "button_operated": (string) (len=3) "yes",
+              (string) (len=8) "crossing": (string) (len=5) "zebra",
+              (string) (len=15) "crossing:island": (string) (len=3) "yes",
+              (string) (len=17) "crossing:markings": (string) (len=5) "zebra",
+              (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=14) "tactile_paving": (string) (len=2) "no"
+            }
+          },
+          Lon: (float64) -105.263161,
+          Lat: (float64) 40.020424
+        }),
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 11427792111,
+            Tags: (map[string]string) (len=7) {
+              (string) (len=15) "button_operated": (string) (len=3) "yes",
+              (string) (len=8) "crossing": (string) (len=5) "zebra",
+              (string) (len=15) "crossing:island": (string) (len=3) "yes",
+              (string) (len=17) "crossing:markings": (string) (len=5) "zebra",
+              (string) (len=15) "flashing_lights": (string) (len=3) "yes",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=14) "tactile_paving": (string) (len=2) "no"
+            }
+          },
+          Lon: (float64) -105.2630359,
+          Lat: (float64) 40.0204257
+        }),
+        (*overpass.Node)(<nil>),
+        (*overpass.Node)({
+          Meta: (overpass.Meta) {
+            ID: (int64) 176434261,
+            Tags: (map[string]string) (len=3) {
+              (string) (len=8) "crossing": (string) (len=12) "uncontrolled",
+              (string) (len=7) "highway": (string) (len=8) "crossing",
+              (string) (len=6) "source": (string) (len=4) "Bing"
+            }
+          },
+          Lon: (float64) -105.2629233,
+          Lat: (float64) 40.0203403
+        })
+      }
+    })
+  }
+})

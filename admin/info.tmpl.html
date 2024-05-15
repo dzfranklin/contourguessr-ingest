@@ -1,0 +1,131 @@
+{{ define "title" }}Info{{ end }}
+
+{{ define "styles" }}
+  <link href="https://cdn.maptiler.com/maptiler-sdk-js/v2.0.3/maptiler-sdk.css" rel="stylesheet"/>
+
+  <style>
+      body {
+          margin: 2rem;
+      }
+
+      .image {
+          max-width: 100%;
+          max-height: 60vh;
+          object-fit: contain;
+          margin: 2rem;
+      }
+
+      #map {
+          width: 80%;
+          height: 50vh;
+          margin: 2rem 0;
+      }
+  </style>
+{{ end }}
+
+{{ define "content" }}
+
+  <a href="{{ .Photo.Large.Source }}">
+    <img class="image" src="{{ .Photo.Large.Source }}" width="{{ .Photo.Large.Width }}"
+         height="{{ .Photo.Large.Height }}">
+  </a>
+
+  <div id="map"></div>
+
+  <table class="kv">
+    <tbody>
+    <tr>
+      <td>Region</td>
+      <td>{{ .Region.Name }} ({{.Region.Id}})</td>
+    </tr>
+    <tr>
+      <td>Inserted at</td>
+      <td>{{ .Photo.InsertedAt }}</td>
+    </tr>
+    <tr>
+      <td>lng, lat</td>
+      <td>{{ .Lng }}, {{ .Lat }}</td>
+    </tr>
+    </tbody>
+  </table>
+
+  <h2>Features</h2>
+  <table class="kv">
+    <tbody>
+    {{ range .FeatureList }}
+      <tr>
+        <td>{{ .Name }}</td>
+        <td>{{ .Value }}</td>
+      </tr>
+    {{ end }}
+    </tbody>
+  </table>
+
+  <h2>Info</h2>
+  <pre><code>{{ .Photo.Info | prettyJSON }}</code></pre>
+
+  <h2>Exif</h2>
+  <pre><code>{{ .Photo.Exif | prettyJSON }}</code></pre>
+
+  <h2>Sizes</h2>
+  <pre><code>{{ .Photo.Sizes | prettyJSON }}</code></pre>
+
+  <h2>Medium</h2>
+  <pre><code>{{ .Photo.Medium | prettyJSON }}</code></pre>
+
+  <h2>Large</h2>
+  <pre><code>{{ .Photo.Large | prettyJSON }}</code></pre>
+{{ end }}
+
+{{ define "scripts" }}
+  <script src="https://cdn.maptiler.com/maptiler-sdk-js/v2.0.3/maptiler-sdk.umd.min.js"></script>
+
+  <script>
+      const maptilerAPIKey = {{ .MaptilerAPIKey }};
+      const lng = {{ .Lng }};
+      const lat = {{ .Lat }};
+  </script>
+
+  <script>
+      maptilersdk.config.apiKey = maptilerAPIKey;
+
+      const map = new maptilersdk.Map({
+          container: 'map',
+          style: 'topo-v2',
+          scaleControl: true,
+          center: [lng, lat],
+          zoom: 8,
+      });
+      map.on('load', () => {
+         map.addSource('point', {
+             type: 'geojson',
+             data: {
+                 type: 'FeatureCollection',
+                 features: [
+                     {
+                         type: 'Feature',
+                         geometry: {
+                             type: 'Point',
+                             coordinates: [lng, lat],
+                         },
+                     }
+                 ]
+             },
+         });
+
+          map.addLayer({
+              id: 'point',
+              type: 'circle',
+              source: 'point',
+              paint: {
+                  'circle-radius': 6,
+                  'circle-color': '#B42222',
+                  'circle-stroke-width': 2,
+                  'circle-stroke-color': '#fff',
+              },
+          })
+      });
+  </script>
+{{ end }}
+
+{{ template "layout.tmpl.html" . }}

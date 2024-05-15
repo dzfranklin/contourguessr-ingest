@@ -90,7 +90,7 @@ func main() {
 
 	go admin.Serve(
 		ctx,
-		repo.Pool(),
+		repo,
 		mc,
 		mustGetEnv("ADMIN_MAPTILER_API_KEY"),
 		adminHost+":"+adminPort,
