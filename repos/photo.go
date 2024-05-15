@@ -19,12 +19,44 @@ type Photo struct {
 
 	Medium PhotoSize `json:"medium"` // corresponds to no suffix, 500px longest edge
 	Large  PhotoSize `json:"large"`  // largest available size besides original
+
+	Serial_ string `json:"-" db:"serial"` // internal, used for cursor
 }
 
 type PhotoSize struct {
 	Width  int    `json:"width"`
 	Height int    `json:"height"`
 	Source string `json:"source"`
+}
+
+func (r *Repo) ListOKPhotos(ctx context.Context, cursor string) (string, []Photo, error) {
+	if cursor == "" {
+		cursor = "0"
+	}
+
+	rows, err := r.db.Query(ctx, `
+		SELECT flickr.*
+		FROM flickr
+		JOIN features f ON flickr.id = f.photo_id
+		WHERE f.is_ok AND serial > $1
+		ORDER BY flickr.serial
+		LIMIT 100
+	`, cursor)
+	if err != nil {
+		return "", nil, err
+	}
+	defer rows.Close()
+
+	photos, err := pgx.CollectRows(rows, pgx.RowToStructByName[Photo])
+	if err != nil {
+		return "", nil, err
+	}
+
+	if len(photos) > 0 {
+		cursor = photos[len(photos)-1].Serial_
+	}
+
+	return cursor, photos, nil
 }
 
 func (r *Repo) GetPhoto(ctx context.Context, id string) (*Photo, error) {
