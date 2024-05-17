@@ -1,0 +1,14 @@
+ALTER TABLE regions DROP COLUMN min_lat;
+ALTER TABLE regions DROP COLUMN min_lng;
+ALTER TABLE regions DROP COLUMN max_lat;
+ALTER TABLE regions DROP COLUMN max_lng;
+ALTER TABLE regions ALTER COLUMN geo TYPE geometry(MultiPolygon, 4326) USING geo::geometry(MultiPolygon, 4326);
+
+ALTER TABLE regions
+    ADD COLUMN min_lng DOUBLE PRECISION GENERATED ALWAYS AS (ST_XMin(geo::geometry)) STORED;
+ALTER TABLE regions
+    ADD COLUMN max_lng DOUBLE PRECISION GENERATED ALWAYS AS (ST_XMax(geo::geometry)) STORED;
+ALTER TABLE regions
+    ADD COLUMN min_lat DOUBLE PRECISION GENERATED ALWAYS AS (ST_YMin(geo::geometry)) STORED;
+ALTER TABLE regions
+    ADD COLUMN max_lat DOUBLE PRECISION GENERATED ALWAYS AS (ST_YMax(geo::geometry)) STORED;
