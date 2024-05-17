@@ -26,7 +26,11 @@
       <tr>
         <td>{{ .RegionName }} ({{ .RegionID }})</td>
         <td>{{ .Count }}</td>
-        <td>{{ .Latest.Format "2006-01-02" }}</td>
+        <td>
+          {{ if .Latest }}
+            {{ .Latest.Format "2006-01-02" }}
+          {{ end }}
+        </td>
         <td>
             {{ if .LastCheck}}
                 {{ .LastCheck.Format "2006-01-02 15:04:05" }}

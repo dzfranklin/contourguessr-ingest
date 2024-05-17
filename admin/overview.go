@@ -28,7 +28,7 @@ type loadIngestEntry struct {
 	RegionID   int
 	RegionName string
 	Count      int
-	Latest     time.Time
+	Latest     *time.Time
 	LastCheck  *time.Time
 }
 
