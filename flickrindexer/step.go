@@ -61,7 +61,9 @@ func Step(
 	}
 
 	var photos []repos.Photo
-	skipped := 0
+	skipOutside := 0
+	skipInProcessing := 0
+	skipErr := 0
 	for _, sp := range searchPage.Photos.Photo {
 		if ctx.Err() != nil {
 			return repos.Cursor{}, nil, ctx.Err()
@@ -77,17 +79,17 @@ func Step(
 		}
 		if !planar.MultiPolygonContains(region.Geo, orb.Point{lng, lat}) {
 			slog.Debug("skip: not in region", "id", sp.Id, "lng", lng, "lat", lat)
-			skipped++
+			skipOutside++
 			continue
 		}
 
 		p, err := processPhoto(ctx, fc, region.Id, sp)
 		if errors.Is(err, ErrorSkipPhoto) {
-			skipped++
+			skipInProcessing++
 			continue
 		} else if err != nil {
 			slog.Error(fmt.Sprintf("error processing photo: %s", err), "owner", sp.Owner, "id", sp.Id)
-			skipped++
+			skipErr++
 			continue
 		}
 		photos = append(photos, p)
@@ -98,7 +100,12 @@ func Step(
 		return repos.Cursor{}, nil, fmt.Errorf("download sizes: %w", err)
 	}
 
-	slog.Info("skipped", "skipped", skipped, "total", len(searchPage.Photos.Photo))
+	slog.Info("skipped",
+		"total", len(searchPage.Photos.Photo),
+		"skipOutside", skipOutside,
+		"skipInProcessing", skipInProcessing,
+		"skipErr", skipErr,
+	)
 
 	if searchPage.Photos.Page >= searchPage.Photos.Pages {
 		now := time.Now()

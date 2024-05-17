@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: ingest
-          image: ghcr.io/dzfranklin/contourguessr-ingest:v0.29
+          image: ghcr.io/dzfranklin/contourguessr-ingest:v0.30
           ports:
             - containerPort: 81
               name: admin
